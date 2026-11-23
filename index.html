@@ -1,0 +1,1623 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebGIS Pemodelan Bahaya & Dampak Kalimantan Barat</title>
+    <link rel="icon" type="image/png" href="LOGO.png">
+    <!-- Google Fonts: Sora, Plus Jakarta Sans & IBM Plex Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Plus+Jakarta+Sans:wght@400;500;600&family=Sora:wght@700;800&display=swap" rel="stylesheet">
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <style>
+        /* DEFAULT: LIGHT MODE */
+        :root {
+            --bg-color: #FBF6F5;
+            --surface-color: #FFFFFF;
+            --surface-hover: #FBE9E7;
+            --text-primary: #1F0909;
+            --text-secondary: #5C3A3A;
+            --border-color: #E6CACA;
+            --accent-color: #b91c1c;
+            --accent-hover: #dc2626;
+            --accent-bg: #FEE2E2;
+            --radius-lg: 14px;
+            --radius-md: 10px;
+            --radius-sm: 6px;
+            --shadow-md: 0 4px 20px rgba(185, 28, 28, 0.08);
+            --hero-overlay: linear-gradient(
+                90deg,
+                rgba(251, 246, 245, 0.50) 0%,
+                rgba(251, 246, 245, 0.25) 50%,
+                rgba(251, 246, 245, 0.05) 100%
+            );
+        }
+
+        /* OPSI KEDUA: DARK MODE */
+        [data-theme="dark"] {
+            --bg-color: #140505;
+            --surface-color: #210a0a;
+            --surface-hover: #361111;
+            --text-primary: #F8F1EE;
+            --text-secondary: #D4B8B4;
+            --border-color: #4D1919;
+            --accent-color: #dc2626;
+            --accent-hover: #ef4444;
+            --accent-bg: rgba(220, 38, 38, 0.16);
+            --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.65);
+            --hero-overlay: linear-gradient(
+                90deg,
+                rgba(20, 5, 5, 0.55) 0%,
+                rgba(20, 5, 5, 0.28) 50%,
+                rgba(20, 5, 5, 0.05) 100%
+            );
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            transition: background-color 0.25s, color 0.25s, border-color 0.25s;
+        }
+
+        body, p, span, a, input, textarea, button, select, option, label, li, td, th, div {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-weight: 400;
+        }
+
+        h1, h2, h3, h4, h5, h6,
+        .logo, .logo span, .brand-highlight,
+        .stat-val, .step-number, .param-group-btn, .param-panel-header {
+            font-family: 'Sora', sans-serif;
+            font-weight: 800;
+        }
+
+        .nav-links a, .btn-mine-nav, .btn-mine-lg, .btn-accent, .btn-outline,
+        .team-card strong {
+            font-weight: 600;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            font-size: 15px;
+        }
+
+        section[id] {
+            scroll-margin-top: 72px;
+        }
+
+        /* NAVBAR 3 BAGIAN */
+        header.navbar {
+            width: 100%;
+            height: 72px;
+            background-color: var(--surface-color);
+            border-bottom: 1px solid var(--border-color);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+            position: sticky;
+            top: 0;
+            z-index: 500;
+            display: flex;
+            align-items: center;
+        }
+
+        .navbar-container {
+            width: 100%;
+            max-width: 1440px;
+            margin: 0 auto;
+            padding: 0 clamp(16px, 3vw, 32px);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+        }
+
+        .nav-left {
+            display: flex;
+            align-items: center;
+            gap: clamp(12px, 2vw, 24px);
+            flex-shrink: 0;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: clamp(1.1rem, 1.5vw, 1.35rem);
+            color: var(--text-primary);
+            text-decoration: none;
+            white-space: nowrap;
+        }
+
+        .logo-icon {
+            width: 34px;
+            height: 34px;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .logo-icon.custom-logo {
+            background: transparent;
+            box-shadow: none;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        .logo-icon.custom-logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+        }
+
+        .nav-center {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex: 1;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: clamp(18px, 2.8vw, 36px);
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--text-primary);
+            font-size: clamp(0.84rem, 1vw, 0.92rem);
+            white-space: nowrap;
+            padding: 6px 2px;
+            transition: color 0.2s;
+        }
+
+        .nav-links a:hover {
+            color: var(--accent-color);
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+
+        .icon-btn {
+            background: transparent;
+            border: 1.5px solid var(--accent-color);
+            color: var(--text-primary);
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.15rem;
+            flex-shrink: 0;
+        }
+
+        .icon-btn:hover {
+            background-color: var(--accent-bg);
+            color: var(--accent-color);
+        }
+
+        .btn-mine-nav {
+            background-color: var(--accent-color);
+            color: #ffffff;
+            height: 38px;
+            padding: 0 16px;
+            border-radius: 19px;
+            font-size: 0.82rem;
+            border: none;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+
+        .btn-mine-nav:hover {
+            background-color: var(--accent-hover);
+        }
+
+        .mobile-menu-btn {
+            display: none;
+            background: transparent;
+            border: 1.5px solid var(--border-color);
+            color: var(--text-primary);
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            cursor: pointer;
+        }
+
+        /* HERO BANNER */
+        .hero-banner {
+            position: relative;
+            min-height: calc(100vh - 72px);
+            padding: 40px 4vw;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: var(--bg-color);
+            background-image: var(--hero-overlay), url('BG.jpg');
+            background-size: cover;
+            background-position: center center;
+            background-repeat: no-repeat;
+            border-bottom: 1px solid var(--border-color);
+            text-align: left;
+            overflow: hidden;
+        }
+
+        .hero-container {
+            max-width: 1380px;
+            width: 100%;
+            position: relative;
+            z-index: 2;
+        }
+
+        .hero-content {
+            max-width: 1140px;
+        }
+
+        .brand-highlight {
+            display: block;
+            color: var(--accent-color);
+            font-size: clamp(3rem, 6vw, 6rem);
+            line-height: 1.1;
+            margin-bottom: 10px;
+            letter-spacing: -0.02em;
+        }
+
+        .hero-content h1 {
+            font-size: clamp(2rem, 3vw, 3em);
+            margin-bottom: 18px;
+            color: var(--text-primary);
+            line-height: 1.35;
+        }
+
+        .hero-actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .btn-mine-lg {
+            background-color: var(--accent-color);
+            color: #ffffff;
+            padding: 11px 22px;
+            border-radius: var(--radius-sm);
+            font-size: 0.88rem;
+            border: none;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+
+        .btn-mine-lg:hover {
+            background-color: var(--accent-hover);
+        }
+
+        /* SECTION UMUM (JARAK LEBIH RAPAT & PROPORSIONAL) */
+        .section-padding {
+            max-width: 1380px;
+            margin: 0 auto;
+            padding: 48px 4vw;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .section-padding + .section-padding {
+            padding-top: 24px;
+        }
+
+        #aboutUsSection.section-padding {
+            padding-bottom: 52px;
+        }
+
+        .section-title-box {
+            text-align: center;
+            max-width: 100%;
+            width: 100%;
+            margin: 0 auto 28px auto;
+        }
+
+        .section-title-box h2 {
+            font-size: clamp(1.75rem, 3.8vw, 2.45rem);
+            margin-bottom: 6px;
+            color: var(--text-primary);
+        }
+
+        .section-title-box p {
+            color: var(--text-secondary);
+            font-size: clamp(0.92rem, 1.2vw, 1.05rem);
+            line-height: 1.55;
+        }
+
+        /* BOX TENTANG WEBGIS (2 KOLOM: DESKRIPSI & STATISTIK KALBAR) */
+        .about-box {
+            background: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: clamp(20px, 2.8vw, 28px);
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+            box-shadow: var(--shadow-md);
+            width: 100%;
+        }
+
+        .about-two-col {
+            display: grid;
+            grid-template-columns: 1.15fr 0.85fr;
+            gap: 24px;
+            align-items: stretch;
+        }
+
+        .about-left-panel {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .about-left-panel h3 {
+            font-size: 1.25rem;
+            margin-bottom: 10px;
+            color: var(--text-primary);
+            line-height: 1.3;
+        }
+
+        .about-left-panel p {
+            font-size: 0.88rem;
+            color: var(--text-secondary);
+            line-height: 1.65;
+            margin-bottom: 12px;
+        }
+
+        .tech-badge-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: flex-start;
+            gap: 8px;
+            margin-top: auto;
+            padding-top: 14px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .tech-badge {
+            background-color: var(--bg-color);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            padding: 6px 12px;
+            border-radius: var(--radius-sm);
+            font-size: 0.76rem;
+            font-weight: 500;
+            display: inline-block;
+        }
+
+        .about-right-stats {
+            background-color: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 18px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .about-stats-title {
+            font-family: 'Sora', sans-serif;
+            font-size: 0.92rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .about-stats-title i {
+            color: var(--accent-color);
+            font-size: 1.05rem;
+        }
+
+        .kalbar-kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            flex: 1;
+        }
+
+        .kalbar-kpi-card {
+            background-color: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .kalbar-kpi-card .kpi-num {
+            font-family: 'Sora', sans-serif;
+            font-size: 1.02rem;
+            font-weight: 800;
+            color: var(--accent-color);
+            line-height: 1.25;
+        }
+
+        .kalbar-kpi-card .kpi-lbl {
+            font-size: 0.72rem;
+            color: var(--text-secondary);
+            margin-top: 3px;
+            line-height: 1.35;
+        }
+
+        /* ALUR KERJA (RATA TENGAH DI SEMUA UKURAN LAYAR) */
+        .grid-workflow-custom {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 16px;
+            max-width: 1380px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .grid-workflow-custom .card-step {
+            flex: 0 1 calc(33.333% - 14px);
+            max-width: 340px;
+            background: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 24px 22px;
+            position: relative;
+            box-shadow: var(--shadow-md);
+        }
+
+        .step-number {
+            position: absolute;
+            top: 14px;
+            right: 16px;
+            font-size: 1.7rem;
+            color: var(--border-color);
+        }
+
+        .card-step > i {
+            font-size: 1.65rem;
+            color: var(--accent-color);
+            margin-bottom: 12px;
+            display: block;
+        }
+
+        .card-step h3 {
+            font-size: 1.05rem;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+            line-height: 1.3;
+        }
+
+        .card-step p {
+            font-size: 0.86rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        /* KETERANGAN SKORING, INDEKS & STATISTIK */
+        .scoring-guide-wrapper {
+            background: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: clamp(16px, 2.5vw, 24px);
+            box-shadow: var(--shadow-md);
+            width: 100%;
+        }
+
+        .color-scale-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+        }
+
+        .scale-card {
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 12px 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .scale-bar-indicator {
+            height: 6px;
+            width: 100%;
+            border-radius: 4px;
+            margin-bottom: 2px;
+        }
+
+        .scale-1 .scale-bar-indicator { background-color: #1a9641; }
+        .scale-2 .scale-bar-indicator { background-color: #a6d96a; }
+        .scale-3 .scale-bar-indicator { background-color: #fdae61; }
+        .scale-4 .scale-bar-indicator { background-color: #d7191c; }
+
+        .scale-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .scale-1 .scale-badge span.num { color: #16a34a; }
+        .scale-2 .scale-badge span.num { color: #65a30d; }
+        .scale-3 .scale-badge span.num { color: #ea580c; }
+        .scale-4 .scale-badge span.num { color: #dc2626; }
+
+        .scale-index-range {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            background: var(--surface-color);
+            padding: 2px 7px;
+            border-radius: 4px;
+            border: 1px solid var(--border-color);
+            width: fit-content;
+        }
+
+        .scale-desc {
+            font-size: 0.74rem;
+            color: var(--text-secondary);
+            line-height: 1.4;
+        }
+
+        /* PEMBAGI LAYOUT 2 KOLOM: PARAMETER MODEL (KIRI) & GRAFIK (KANAN) */
+        .bottom-split-grid {
+            display: grid;
+            grid-template-columns: 1fr 1.15fr;
+            gap: 18px;
+            margin-top: 18px;
+            align-items: start;
+            width: 100%;
+        }
+
+        .split-card {
+            background-color: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 18px;
+        }
+
+        /* KOLOM KIRI: DROPDOWN BUTTON PARAMETER */
+        .param-group {
+            margin-bottom: 10px;
+            border-radius: var(--radius-sm);
+            overflow: hidden;
+        }
+
+        .param-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .param-group-btn {
+            width: 100%;
+            background-color: var(--surface-color);
+            border: 1px solid var(--border-color);
+            padding: 11px 14px;
+            font-size: 0.84rem;
+            color: var(--text-primary);
+            text-align: left;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            line-height: 1.35;
+        }
+
+        .param-group-btn:hover {
+            background-color: var(--surface-hover);
+            border-color: var(--accent-color);
+        }
+
+        .param-group-btn span {
+            flex: 1;
+            text-align: left;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-weight: 600;
+        }
+
+        .param-group-btn i {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            flex-shrink: 0;
+        }
+
+        .param-group-btn.is-open {
+            background-color: var(--accent-color) !important;
+            border-color: var(--accent-color) !important;
+            color: #ffffff !important;
+        }
+
+        .param-group-btn.is-open:hover {
+            background-color: var(--accent-hover) !important;
+            border-color: var(--accent-hover) !important;
+        }
+
+        .param-group-btn.is-open i {
+            color: #ffffff !important;
+        }
+
+        .param-group-content {
+            display: none !important;
+            flex-direction: column;
+            gap: 7px;
+            padding: 9px 4px 2px 4px;
+        }
+
+        .param-group-content.active {
+            display: flex !important;
+            animation: fadeIn 0.25s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .sub-param-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.8rem;
+            padding: 8px 10px;
+            border-radius: var(--radius-sm);
+            background-color: var(--surface-color);
+            border: 1px solid var(--border-color);
+        }
+
+        .sub-param-row strong {
+            color: var(--text-primary);
+            display: block;
+            font-size: 0.81rem;
+            font-weight: 600;
+        }
+
+        .sub-param-row span {
+            color: var(--text-secondary);
+            font-size: 0.73rem;
+        }
+
+        /* KOLOM KANAN: GRAFIK STATISTIK HOTSPOT 2015 - 2025 */
+        .split-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 12px;
+            padding-bottom: 9px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .split-card-header h4 {
+            font-size: 0.95rem;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .split-card-header h4 i {
+            color: var(--accent-color);
+        }
+
+        .period-tag {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.72rem;
+            font-weight: 600;
+            padding: 3px 9px;
+            border-radius: 12px;
+            background-color: var(--accent-bg);
+            color: var(--accent-color);
+        }
+
+        .hotspot-summary-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .hotspot-mini-stat {
+            background-color: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            padding: 8px;
+            text-align: center;
+        }
+
+        .hotspot-mini-stat .val {
+            font-family: 'Sora', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 800;
+            color: var(--accent-color);
+        }
+
+        .hotspot-mini-stat .lbl {
+            font-size: 0.68rem;
+            color: var(--text-secondary);
+            margin-top: 2px;
+        }
+
+        .yearly-chart-box {
+            background-color: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 14px 12px 10px 12px;
+        }
+
+        .yearly-bars-grid {
+            display: grid;
+            grid-template-columns: repeat(11, 1fr);
+            gap: 6px;
+            height: 175px;
+            align-items: end;
+            padding-top: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .year-col {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            height: 100%;
+            position: relative;
+        }
+
+        .year-val-label {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.61rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+            writing-mode: vertical-rl;
+            transform: rotate(180deg);
+            white-space: nowrap;
+        }
+
+        .year-bar {
+            width: 100%;
+            max-width: 24px;
+            border-radius: 5px 5px 0 0;
+            background: linear-gradient(180deg, var(--accent-hover) 0%, var(--accent-color) 100%);
+            transition: height 0.4s ease, opacity 0.2s;
+            position: relative;
+        }
+
+        .year-bar:hover {
+            opacity: 0.85;
+        }
+
+        .year-axis-labels {
+            display: grid;
+            grid-template-columns: repeat(11, 1fr);
+            gap: 6px;
+            margin-top: 6px;
+            text-align: center;
+        }
+
+        .year-axis-labels span {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.67rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .chart-footnote {
+            margin-top: 10px;
+            font-size: 0.71rem;
+            color: var(--text-secondary);
+            line-height: 1.45;
+        }
+
+        /* TEAM GRID (TIM PENGEMBANG) */
+        .team-grid {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+            width: 100%;
+            max-width: 100%; /* Menghilangkan batas 1000px agar sejajar penuh dengan box */
+            margin: 0 auto;
+        }
+
+        .team-card {
+            flex: 0 1 calc(33.333% - 14px); /* Pas 3 kolom di baris atas, 2 di baris bawah */
+            min-width: 260px;
+            max-width: 440px;
+            background: var(--bg-color);
+            padding: 24px 18px;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-color);
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            box-shadow: var(--shadow-md);
+        }
+
+        .team-photo-wrapper {
+            width: 104px;
+            height: 104px;
+            border-radius: 16px;
+            overflow: hidden;
+            border: 2px solid var(--border-color);
+            background-color: var(--surface-hover);
+            flex-shrink: 0;
+        }
+
+        .team-card strong {
+            color: var(--text-primary);
+            font-size: 0.98rem;
+            line-height: 1.35;
+        }
+
+        .team-card a {
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            word-break: break-word;
+        }
+
+        .team-card a:hover,
+        .team-card a i {
+            color: var(--accent-color);
+        }
+        .team-photo-wrapper {
+            width: 104px;
+            height: 104px;
+            border-radius: 16px;
+            overflow: hidden;
+            border: 2px solid var(--border-color);
+            background-color: var(--surface-hover);
+            flex-shrink: 0;
+        }
+
+        .team-photo-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center top; /* menjaga wajah tetap di tengah atas */
+            display: block;
+        }
+
+        /* FOOTER */
+        footer {
+            background: var(--surface-color);
+            border-top: 1px solid var(--border-color);
+            padding: 16px 4vw;
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 0.78rem;
+            margin-top: auto;
+        }
+
+        /* RESPONSIVE BREAKPOINTS */
+        @media (max-width: 900px) {
+            .section-padding {
+                padding: 36px 4vw;
+            }
+            .section-padding + .section-padding {
+                padding-top: 20px;
+            }
+            .about-two-col {
+                grid-template-columns: 1fr;
+            }
+            .about-left-panel .tech-badge-container {
+                justify-content: center;
+            }
+            .color-scale-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .bottom-split-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 880px) {
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .nav-center {
+                display: none;
+                position: absolute;
+                top: 72px;
+                left: 0;
+                right: 0;
+                background-color: var(--surface-color);
+                border-bottom: 1px solid var(--border-color);
+                padding: 16px 24px;
+                box-shadow: var(--shadow-md);
+            }
+
+            .nav-center.open {
+                display: block;
+            }
+
+            .nav-links {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 14px;
+            }
+
+            .nav-links a {
+                display: block;
+                width: 100%;
+                font-size: 0.92rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .about-box {
+                padding: 20px 16px;
+            }
+
+            .grid-workflow-custom .card-step {
+                    flex: 1 1 calc(50% - 14px);
+                    min-width: 220px;
+                    max-width: 100%;
+            }
+
+            .team-grid {
+                gap: 14px;
+            }
+
+            .team-card {
+                flex: 1 1 calc(50% - 14px);
+                min-width: 150px;
+                max-width: 100%;
+                padding: 18px 12px;
+            }
+
+            .team-photo-wrapper {
+                width: 82px;
+                height: 82px;
+                border-radius: 14px;
+            }
+
+            .team-card strong {
+                font-size: 0.85rem;
+            }
+
+            .team-card a {
+                font-size: 0.7rem;
+            }
+        }
+
+        @media (max-width: 540px) {
+            .color-scale-grid {
+                grid-template-columns: 1fr;
+            }
+            .grid-workflow-custom .card-step {
+                    flex: 1 1 100%;
+                    max-width: 100%;
+            }
+            .year-axis-labels span {
+                font-size: 0.58rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .btn-mine-nav span {
+                display: none;
+            }
+            .btn-mine-nav {
+                width: 38px;
+                padding: 0;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- NAVBAR 3 BAGIAN -->
+    <header class="navbar">
+        <div class="navbar-container">
+            <div class="nav-left">
+                <a href="#berandaSection" class="logo" onclick="window.scrollTo({top: 0, behavior: 'smooth'}); closeMobileMenu(); return false;">
+                    <div class="logo-icon custom-logo">
+                        <img src="LOGO.png" alt="Logo WebGIS">
+                    </div>
+                    <span>WebGIS</span>
+                </a>
+            </div>
+
+            <nav class="nav-center" id="navCenterMenu">
+                <ul class="nav-links">
+                    <li><a href="#tentangSection" onclick="closeMobileMenu()">Tentang WebGIS</a></li>
+                    <li><a href="#alurKerjaSection" onclick="closeMobileMenu()">Alur Kerja</a></li>
+                    <li><a href="#skoringSection" onclick="closeMobileMenu()">Klasifikasi &amp; Parameter</a></li>
+                    <li><a href="#aboutUsSection" onclick="closeMobileMenu()">Tim Pengembang</a></li>
+                </ul>
+            </nav>
+
+            <div class="nav-right">
+                <button class="icon-btn" id="themeToggle" title="Ganti Mode Tampilan">
+                    <i class="ph ph-moon" id="themeIcon"></i>
+                </button>
+                <a href="DASHBOARD.html" class="btn-mine-nav">
+                    <i class="ph ph-map-pin-area"></i>
+                    <span>Peta Hotspot</span>
+                </a>
+                <button class="mobile-menu-btn" onclick="toggleMobileMenu()" title="Menu Navigasi">
+                    <i class="ph ph-list" id="mobileMenuIcon"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- KONTEN UTAMA LANDING -->
+    <main>
+        <!-- BERANDA / HERO BANNER -->
+        <section class="hero-banner" id="berandaSection">
+            <div class="hero-container">
+                <div class="hero-content">
+                    <span class="brand-highlight">WebGIS</span>
+                    <h1>Pemodelan Spasial Bahaya dan Dampak Kebakaran Hutan dan Lahan di Kalimantan Barat</h1>
+                    <div class="hero-actions">
+                        <a href="DASHBOARD.html" class="btn-mine-lg">
+                            <i class="ph ph-map-pin-area"></i>
+                            <span>Buka Peta Hotspot</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- PENJELASAN WEBGIS (2 KOLOM: DESKRIPSI & STATISTIK WILAYAH) -->
+        <section id="tentangSection" class="section-padding">
+            <div class="section-title-box">
+                <h2>Mengenai WebGIS</h2>
+                <p>Sistem informasi geografis berbasis web untuk mendukung mitigasi dan pemetaan risiko kebakaran hutan serta lahan gambut di Provinsi Kalimantan Barat.</p>
+            </div>
+
+            <div class="about-box">
+                <div class="about-two-col">
+                    
+                    <!-- KOLOM KIRI: PENJELASAN WEBGIS -->
+                    <div class="about-left-panel">
+                        <div>
+                            <h3>Pemodelan Spasial Bahaya &amp; Dampak Karhutla</h3>
+                            <p>
+                                WebGIS ini dikembangkan untuk memetakan tingkat kerawanan kebakaran hutan dan lahan di seluruh wilayah Provinsi Kalimantan Barat melalui integrasi 11 parameter spasial biofisik bahan bakar, aktivitas antropogenik, serta kondisi iklim, hidrologi, dan topografi.
+                            </p>
+                            <p>
+                                Platform ini menyajikan peta tingkat bahaya (<i>Safety Level</i>) dalam 4 kelas, sebaran titik panas (<i>hotspot</i>) NASA FIRMS, serta analisis keterpaparan penduduk dan lahan gambut untuk mendukung prioritas mitigasi kebencanaan.
+                            </p>
+                        </div>
+                        <div class="tech-badge-container">
+                            <span class="tech-badge">Resolusi: 100&times;100 m</span>
+                            <span class="tech-badge">CRS: UTM 49N (EPSG:32649)</span>
+                            <span class="tech-badge">Pembobotan AHP (CR &le; 0,10)</span>
+                            <span class="tech-badge">Periode: 2015–2025</span>
+                        </div>
+                    </div>
+
+                    <!-- KOLOM KANAN: STATISTIK WILAYAH KALIMANTAN BARAT -->
+                    <div class="about-right-stats">
+                        <div class="about-stats-title">
+                            <i class="ph-fill ph-map-trifold"></i>
+                            <span>Kalimantan Barat</span>
+                        </div>
+
+                        <div class="kalbar-kpi-grid">
+                            <div class="kalbar-kpi-card">
+                                <div class="kpi-num">&plusmn;147.307 km&sup2;</div>
+                                <div class="kpi-lbl">Luas Provinsi</div>
+                            </div>
+                            <div class="kalbar-kpi-card">
+                                <div class="kpi-num">12 Kab + 2 Kota</div>
+                                <div class="kpi-lbl">Wilayah Administrasi</div>
+                            </div>
+                            <div class="kalbar-kpi-card">
+                                <div class="kpi-num">21.292</div>
+                                <div class="kpi-lbl">Hotspot High (2018–2022)</div>
+                            </div>
+                            <div class="kalbar-kpi-card">
+                                <div class="kpi-num">270.317 ha</div>
+                                <div class="kpi-lbl">Luas Terbakar (2018–2022)</div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 1: ALUR KERJA PEMODELAN -->
+        <section id="alurKerjaSection" class="section-padding">
+            <div class="section-title-box">
+                <h2>Alur Kerja Pemodelan</h2>
+                <p>Tahapan pengolahan data geospasial secara sistematis mulai dari standardisasi hingga analisis dampak.</p>
+            </div>
+
+            <div class="grid-workflow-custom">
+                <div class="card-step">
+                    <span class="step-number">01</span>
+                    <i class="ph ph-bounding-box"></i>
+                    <h3>Standardisasi</h3>
+                    <p>Penyatuan data, pemotongan batas Provinsi Kalimantan Barat (<i>Clip</i>), penyeragaman proyeksi EPSG:32649, dan penyelarasan resolusi piksel 100 m (<i>Resampling</i>).</p>
+                </div>
+
+                <div class="card-step">
+                    <span class="step-number">02</span>
+                    <i class="ph ph-sliders-horizontal"></i>
+                    <h3>Ekstraksi &amp; Reklasifikasi</h3>
+                    <p>Perhitungan indeks spektral (NDMI, NDVI, NBR, LST) di Google Earth Engine, analisis jarak (<i>Euclidean Distance</i>), serta reklasifikasi tiap parameter ke skala skor 1–4.</p>
+                </div>
+
+                <div class="card-step">
+                    <span class="step-number">03</span>
+                    <i class="ph ph-scales"></i>
+                    <h3>Pembobotan AHP</h3>
+                    <p>Penentuan bobot objektif untuk 3 kriteria utama dan 11 sub-kriteria melalui <i>Analytic Hierarchy Process</i> (AHP) yang teruji konsistensinya (CR &le; 0,10).</p>
+                </div>
+
+                <div class="card-step">
+                    <span class="step-number">04</span>
+                    <i class="ph ph-stack"></i>
+                    <h3>Weighted Overlay &amp; Validasi</h3>
+                    <p>Penggabungan seluruh raster skor menggunakan <i>Simple Additive Weighting</i> (SAW) menjadi Peta Bahaya Karhutla, lalu divalidasi dengan titik panas VIIRS/MODIS 2023–2025.</p>
+                </div>
+
+                <div class="card-step">
+                    <span class="step-number">05</span>
+                    <i class="ph ph-globe-hemisphere-east"></i>
+                    <h3>Analisis Dampak</h3>
+                    <p>Tumpang susun (<i>overlay</i>) peta bahaya dengan data kepadatan penduduk 2025, tutupan lahan, dan sebaran gambut per kabupaten/kota.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 2: INDEKS BAHAYA, DROPDOWN BUTTON 11 PARAMETER & GRAFIK HOTSPOT 2015-2025 -->
+        <section id="skoringSection" class="section-padding">
+            <div class="section-title-box">
+                <h2>Klasifikasi Indeks &amp; Parameter Model</h2>
+                <p>Integrasi 11 parameter lingkungan dan antropogenik ke dalam 4 kelas <i>Safety Level</i> serta grafik tren tahunan titik panas (<i>hotspot</i>) periode 2015–2025.</p>
+            </div>
+
+            <div class="scoring-guide-wrapper">
+                <!-- 1. LEGENDA SKALA WARNA 4 KELAS -->
+                <div class="color-scale-grid">
+                    <div class="scale-card scale-1">
+                        <div class="scale-bar-indicator"></div>
+                        <div class="scale-badge">
+                            <span class="num">SKOR 1 &bull; BAHAYA RENDAH</span>
+                            <i class="ph-fill ph-shield-check" style="color: #16a34a;"></i>
+                        </div>
+                        <div class="scale-index-range">Indeks Akhir: 1,00 – 1,75</div>
+                        <div class="scale-desc">Kondisi paling aman. Area non-gambut, tajuk sangat lembap (NDMI &gt; 0,40), suhu rendah, atau jauh dari pemicu api.</div>
+                    </div>
+
+                    <div class="scale-card scale-2">
+                        <div class="scale-bar-indicator"></div>
+                        <div class="scale-badge">
+                            <span class="num">SKOR 2 &bull; BAHAYA SEDANG</span>
+                            <i class="ph-fill ph-info" style="color: #65a30d;"></i>
+                        </div>
+                        <div class="scale-index-range">Indeks Akhir: 1,76 – 2,50</div>
+                        <div class="scale-desc">Kerawanan moderat. Memiliki potensi terbakar pada musim kemarau panjang apabila terjadi penurunan kelembapan tajuk dan pembukaan lahan.</div>
+                    </div>
+
+                    <div class="scale-card scale-3">
+                        <div class="scale-bar-indicator"></div>
+                        <div class="scale-badge">
+                            <span class="num">SKOR 3 &bull; BAHAYA TINGGI</span>
+                            <i class="ph-fill ph-warning" style="color: #ea580c;"></i>
+                        </div>
+                        <div class="scale-index-range">Indeks Akhir: 2,51 – 3,25</div>
+                        <div class="scale-desc">Kerawanan tinggi. Kombinasi vegetasi stres air, suhu permukaan tinggi (28–35 &deg;C), serta kedekatan dengan jalan atau permukiman.</div>
+                    </div>
+
+                    <div class="scale-card scale-4">
+                        <div class="scale-bar-indicator"></div>
+                        <div class="scale-badge">
+                            <span class="num">SKOR 4 &bull; SANGAT TINGGI</span>
+                            <i class="ph-fill ph-fire" style="color: #dc2626;"></i>
+                        </div>
+                        <div class="scale-index-range">Indeks Akhir: 3,26 – 4,00</div>
+                        <div class="scale-desc">Zona kritis paling rawan terbakar. Didominasi gambut kering (NDMI &lt; 0,00), biomassa rapat, dan tekanan antropogenik tinggi.</div>
+                    </div>
+                </div>
+
+                <!-- 2. BAGIAN BAWAH 2 KOLOM: KIRI DROPDOWN 11 PARAMETER, KANAN GRAFIK HOTSPOT 2015-2025 -->
+                <div class="bottom-split-grid">
+
+                    <!-- KOLOM KIRI: PARAMETER MODEL -->
+                    <div class="split-card">
+                        <div class="split-card-header">
+                            <h4><i class="ph-fill ph-sliders-horizontal"></i> Parameter Model</h4>
+                            <span class="period-tag">11 Parameter</span>
+                        </div>
+
+                        <!-- 1. PARAMETER BIOFISIK DAN BAHAN BAKAR (5 PARAMETER) -->
+                        <div class="param-group">
+                            <button type="button" class="param-group-btn" onclick="toggleParamGroup('grpBiofisik', this)">
+                                <span>Parameter Biofisik dan Bahan Bakar</span>
+                                <i class="ph ph-caret-down"></i>
+                            </button>
+                            <div class="param-group-content" id="grpBiofisik">
+                                <div class="sub-param-row">
+                                    <div>
+                                        <strong>Sebaran Gambut</strong>
+                                        <span>Lahan gambut vs non-gambut (tanah mineral)</span>
+                                    </div>
+                                </div>
+                                <div class="sub-param-row">
+                                    <div>
+                                        <strong>Tutupan Lahan</strong>
+                                        <span>Ketersediaan biomassa permukaan</span>
+                                    </div>
+                                </div>
+                                <div class="sub-param-row">
+                                    <div>
+                                        <strong>Kelembapan Tajuk (NDMI)</strong>
+                                        <span>Kadar air cair vegetasi dan kondisi stres air</span>
+                                    </div>
+                                </div>
+                                <div class="sub-param-row">
+                                    <div>
+                                        <strong>Kerapatan Vegetasi (NDVI)</strong>
+                                        <span>Indikator beban bahan bakar dan kerapatan biomassa</span>
+                                    </div>
+                                </div>
+                                <div class="sub-param-row">
+                                    <div>
+                                        <strong>Keparahan Terbakar (NBR)</strong>
+                                        <span>Deteksi bekas kebakaran dan tingkat pemulihan vegetasi</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 2. PARAMETER ANTROPOGENIK DAN PEMICU (2 PARAMETER) -->
+                        <div class="param-group">
+                            <button type="button" class="param-group-btn" onclick="toggleParamGroup('grpAntropogenik', this)">
+                                <span>Parameter Antropogenik dan Pemicu</span>
+                                <i class="ph ph-caret-down"></i>
+                            </button>
+                            <div class="param-group-content" id="grpAntropogenik">
+                                <div class="sub-param-row">
+                                    <div>
+                                        <strong>Jarak ke Permukiman</strong>
+                                        <span>Intensitas aktivitas manusia dan zona penyangga</span>
+                                    </div>
+                                </div>
+                                <div class="sub-param-row">
+                                    <div>
+                                        <strong>Jarak ke Jaringan Jalan</strong>
+                                        <span>Aksesibilitas keluar-masuk kawasan lahan</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 3. PARAMETER IKLIM, TOPOGRAFI, DAN HIDROLOGI (4 PARAMETER) -->
+                        <div class="param-group" style="margin-bottom: 0;">
+                            <button type="button" class="param-group-btn" onclick="toggleParamGroup('grpIklim', this)">
+                                <span>Parameter Iklim, Topografi, dan Hidrologi</span>
+                                <i class="ph ph-caret-down"></i>
+                            </button>
+                            <div class="param-group-content" id="grpIklim">
+                                <div class="sub-param-row">
+                                    <div>
+                                        <strong>Temperatur Permukaan (LST)</strong>
+                                        <span>Suhu permukaan daratan termal saat musim kemarau</span>
+                                    </div>
+                                </div>
+                                <div class="sub-param-row">
+                                    <div>
+                                        <strong>Jarak ke Badan Air</strong>
+                                        <span>Kelembapan alami dan sekat bakar alami</span>
+                                    </div>
+                                </div>
+                                <div class="sub-param-row">
+                                    <div>
+                                        <strong>Kemiringan Lereng (Slope)</strong>
+                                        <span>Kecepatan penjalaran api ke arah lereng atas</span>
+                                    </div>
+                                </div>
+                                <div class="sub-param-row">
+                                    <div>
+                                        <strong>Elevasi Permukaan</strong>
+                                        <span>Dataran rendah gambut vs pegunungan lembap</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- KOLOM KANAN: GRAFIK STATISTIK HOTSPOT 2015 - 2025 -->
+                    <div class="split-card">
+                        <div class="split-card-header">
+                            <h4><i class="ph-fill ph-chart-bar"></i> Tren Titik Panas Tahunan</h4>
+                            <span class="period-tag">2015 – 2025</span>
+                        </div>
+
+                        <div class="hotspot-summary-row">
+                            <div class="hotspot-mini-stat">
+                                <div class="val">48.632</div>
+                                <div class="lbl">Total Hotspot</div>
+                            </div>
+                            <div class="hotspot-mini-stat">
+                                <div class="val">11.804</div>
+                                <div class="lbl">Puncak (2019)</div>
+                            </div>
+                            <div class="hotspot-mini-stat">
+                                <div class="val">4.421</div>
+                                <div class="lbl">Rata-rata / Thn</div>
+                            </div>
+                        </div>
+
+                        <div class="yearly-chart-box">
+                            <div class="yearly-bars-grid">
+                                <div class="year-col">
+                                    <span class="year-val-label">10.940</span>
+                                    <div class="year-bar" style="height: 85%;"></div>
+                                </div>
+                                <div class="year-col">
+                                    <span class="year-val-label">1.420</span>
+                                    <div class="year-bar" style="height: 15%;"></div>
+                                </div>
+                                <div class="year-col">
+                                    <span class="year-val-label">980</span>
+                                    <div class="year-bar" style="height: 11%;"></div>
+                                </div>
+                                <div class="year-col">
+                                    <span class="year-val-label">4.612</span>
+                                    <div class="year-bar" style="height: 38%;"></div>
+                                </div>
+                                <div class="year-col">
+                                    <span class="year-val-label">11.804</span>
+                                    <div class="year-bar" style="height: 92%;"></div>
+                                </div>
+                                <div class="year-col">
+                                    <span class="year-val-label">1.154</span>
+                                    <div class="year-bar" style="height: 13%;"></div>
+                                </div>
+                                <div class="year-col">
+                                    <span class="year-val-label">1.890</span>
+                                    <div class="year-bar" style="height: 19%;"></div>
+                                </div>
+                                <div class="year-col">
+                                    <span class="year-val-label">1.832</span>
+                                    <div class="year-bar" style="height: 18%;"></div>
+                                </div>
+                                <div class="year-col">
+                                    <span class="year-val-label">8.740</span>
+                                    <div class="year-bar" style="height: 68%;"></div>
+                                </div>
+                                <div class="year-col">
+                                    <span class="year-val-label">2.910</span>
+                                    <div class="year-bar" style="height: 25%;"></div>
+                                </div>
+                                <div class="year-col">
+                                    <span class="year-val-label">2.350</span>
+                                    <div class="year-bar" style="height: 21%;"></div>
+                                </div>
+                            </div>
+
+                            <div class="year-axis-labels">
+                                <span>2015</span>
+                                <span>2016</span>
+                                <span>2017</span>
+                                <span>2018</span>
+                                <span>2019</span>
+                                <span>2020</span>
+                                <span>2021</span>
+                                <span>2022</span>
+                                <span>2023</span>
+                                <span>2024</span>
+                                <span>2025</span>
+                            </div>
+                        </div>
+
+                        <p class="chart-footnote">
+                            Grafik menunjukkan dinamika jumlah kemunculan titik panas (<i>hotspot</i>) tahunan di Provinsi Kalimantan Barat berdasarkan sensor satelit NASA FIRMS (MODIS &amp; VIIRS) dan data SiPongi KLHK pada periode 2015–2025.
+                        </p>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- ABOUT US SECTION -->
+        <section id="aboutUsSection" class="section-padding">
+            <div class="section-title-box">
+                <h2>Tim Pengembang</h2>
+                <p>WebGIS ini dirancang oleh mahasiswa Teknik Geodesi dan Geomatika Institut Teknologi Bandung (Kelompok 02 K04 &ndash; GD4103 Sistem Informasi Geografis).</p>
+            </div>
+            <div class="about-box">
+                <div class="about-text">
+                    <div class="team-grid">
+                        <div class="team-card">
+                            <div class="team-photo-wrapper">
+                                <img src="15123001.jpg" alt="Nayla Nandya Salim">
+                            </div>
+                            <strong>Nayla Nandya Salim</strong>
+                            <a href="mailto:15123001@mahasiswa.itb.ac.id"><i class="ph ph-envelope-simple"></i> 15123001@mahasiswa.itb.ac.id</a>
+                        </div>
+
+                        <div class="team-card">
+                            <div class="team-photo-wrapper">
+                                <img src="15123010.jpg" alt="Nandyta Mayla Yasmin">
+                            </div>
+                            <strong>Nandyta Mayla Yasmin</strong>
+                            <a href="mailto:15123010@mahasiswa.itb.ac.id"><i class="ph ph-envelope-simple"></i> 15123010@mahasiswa.itb.ac.id</a>
+                        </div>
+
+                        <div class="team-card">
+                            <div class="team-photo-wrapper">
+                                <img src="15123020.jpg" alt="Hafiiz Alfikri Ferdinansyach Suroso">
+                            </div>
+                            <strong>Hafiiz Alfikri Ferdinansyach Suroso</strong>
+                            <a href="mailto:15123020@mahasiswa.itb.ac.id"><i class="ph ph-envelope-simple"></i> 15123020@mahasiswa.itb.ac.id</a>
+                        </div>
+
+                        <div class="team-card">
+                            <div class="team-photo-wrapper">
+                                <img src="15123021.jpg" alt="Jessie Olivia Simanjuntak">
+                            </div>
+                            <strong>Jessie Olivia Simanjuntak</strong>
+                            <a href="mailto:15123021@mahasiswa.itb.ac.id"><i class="ph ph-envelope-simple"></i> 15123021@mahasiswa.itb.ac.id</a>
+                        </div>
+
+                        <div class="team-card">
+                            <div class="team-photo-wrapper">
+                                <img src="15123061.jpg" alt="Anugrah Arya Muhajir">
+                            </div>
+                            <strong>Anugrah Arya Muhajir</strong>
+                            <a href="mailto:15123061@mahasiswa.itb.ac.id"><i class="ph ph-envelope-simple"></i> 15123061@mahasiswa.itb.ac.id</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section> 
+    </main>
+
+    <footer>
+        <p>&copy; 2026 GD4103 Sistem Informasi Geografis ITB. Hak Cipta Dilindungi Undang-Undang.</p>
+    </footer>
+
+    <!-- SCRIPT -->
+    <script>
+        const yearlyHotspotData = [
+            { year: '2015', count: 10940, phase: 'train' },
+            { year: '2016', count: 1420,  phase: 'train' },
+            { year: '2017', count: 980,   phase: 'train' },
+            { year: '2018', count: 4612,  phase: 'train' },
+            { year: '2019', count: 11804, phase: 'train' },
+            { year: '2020', count: 1154,  phase: 'train' },
+            { year: '2021', count: 1890,  phase: 'train' },
+            { year: '2022', count: 1832,  phase: 'train' },
+            { year: '2023', count: 8740,  phase: 'val' },
+            { year: '2024', count: 2910,  phase: 'val' },
+            { year: '2025', count: 2350,  phase: 'val' }
+        ];
+
+        function renderYearlyHotspotChart() {
+            const chartContainer = document.getElementById('yearlyHotspotChart');
+            const labelContainer = document.getElementById('yearlyHotspotLabels');
+            if (!chartContainer || !labelContainer) return;
+
+            const maxVal = Math.max(...yearlyHotspotData.map(d => d.count));
+
+            chartContainer.innerHTML = yearlyHotspotData.map(item => {
+                const heightPct = Math.max(8, Math.round((item.count / maxVal) * 100));
+                const barClass = item.phase === 'val' ? 'year-bar val-phase' : 'year-bar';
+                return `
+                    <div class="year-col" title="Tahun ${item.year}: ${item.count.toLocaleString('id-ID')} hotspot">
+                        <span class="year-val-label">${item.count.toLocaleString('id-ID')}</span>
+                        <div class="${barClass}" style="height: ${heightPct}%;"></div>
+                    </div>
+                `;
+            }).join('');
+
+            labelContainer.innerHTML = yearlyHotspotData.map(item => `
+                <span>${item.year.slice(2)}</span>
+            `).join('');
+        }
+
+        function toggleParamGroup(groupId, btnElement) {
+            const content = document.getElementById(groupId);
+            const icon = btnElement.querySelector('i');
+            
+            const isCurrentlyOpen = content.classList.contains('active');
+            
+            if (isCurrentlyOpen) {
+                content.classList.remove('active');
+                btnElement.classList.remove('is-open');
+                icon.className = 'ph ph-caret-down';
+            } else {
+                content.classList.add('active');
+                btnElement.classList.add('is-open');
+                icon.className = 'ph ph-caret-up';
+            }
+        }
+
+        function toggleMobileMenu() {
+            const menu = document.getElementById('navCenterMenu');
+            const icon = document.getElementById('mobileMenuIcon');
+            menu.classList.toggle('open');
+            icon.className = menu.classList.contains('open') ? 'ph ph-x' : 'ph ph-list';
+        }
+
+        function closeMobileMenu() {
+            const menu = document.getElementById('navCenterMenu');
+            const icon = document.getElementById('mobileMenuIcon');
+            if (menu) menu.classList.remove('open');
+            if (icon) icon.className = 'ph ph-list';
+        }
+
+        // Default Light Mode & Render Grafik
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            document.getElementById('themeIcon').className = savedTheme === 'light' ? 'ph ph-moon' : 'ph ph-sun';
+            renderYearlyHotspotChart();
+        });
+
+        const themeToggleBtn = document.getElementById('themeToggle');
+        themeToggleBtn.addEventListener('click', () => {
+            const current = document.documentElement.getAttribute('data-theme') || 'light';
+            const target = current === 'light' ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', target);
+            localStorage.setItem('theme', target);
+            document.getElementById('themeIcon').className = target === 'light' ? 'ph ph-moon' : 'ph ph-sun';
+        });
+    </script>
+</body>
+</html>

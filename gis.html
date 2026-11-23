@@ -1,0 +1,2176 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebGIS Pemodelan Bahaya & Dampak Karhutla Kalimantan Barat</title>
+    <link rel="icon" type="image/png" href="LOGO.png">
+    
+    <!-- Phosphor Icons & Leaflet CSS/JS -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <!-- Google Fonts: Sora, Plus Jakarta Sans & IBM Plex Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Sora:wght@700;800&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-color: #140505;
+            --surface-color: #210a0a;
+            --surface-hover: #361111;
+            --text-primary: #F8F1EE;
+            --text-secondary: #D4B8B4;
+            --border-color: #4D1919;
+            --accent-color: #dc2626;
+            --accent-hover: #ef4444;
+            --accent-bg: rgba(220, 38, 38, 0.16);
+            --radius-lg: 16px;
+            --radius-md: 10px;
+            --radius-sm: 6px;
+            --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.65);
+        }
+
+        [data-theme="light"] {
+            --bg-color: #FBF6F5;
+            --surface-color: #FFFFFF;
+            --surface-hover: #FBE9E7;
+            --text-primary: #1F0909;
+            --text-secondary: #5C3A3A;
+            --border-color: #E6CACA;
+            --accent-color: #b91c1c;
+            --accent-hover: #dc2626;
+            --accent-bg: #FEE2E2;
+            --shadow-md: 0 4px 20px rgba(185, 28, 28, 0.08);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            transition: background-color 0.25s, color 0.25s, border-color 0.25s;
+        }
+
+        body, p, span, a, input, button, select {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-weight: 400;
+        }
+
+        button {
+            cursor: pointer;
+        }
+
+        h1, h2, h3, h4, .logo span, .sidebar-title, .outside-section-title, .param-group-btn {
+            font-family: 'Sora', sans-serif;
+            font-weight: 700;
+        }
+
+        .map-coord-tracker, .weight-tag, .slider-tooltip, .year-chip, .static-year-pill {
+            font-family: 'IBM Plex Mono', monospace;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        /* NAVIGATION BAR */
+        .logo-icon.custom-logo {
+            background: transparent;
+            box-shadow: none;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        .logo-icon.custom-logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+        }
+
+        header.navbar {
+            min-height: 64px;
+            background-color: var(--surface-color);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+            padding: 10px 24px;
+            position: sticky;
+            top: 0;
+            z-index: 500;
+        }
+
+        .nav-left, .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+            font-size: 1.35rem;
+            color: var(--text-primary);
+            text-decoration: none;
+        }
+
+        .logo-icon {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, #f59e0b 0%, #dc2626 100%);
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 8px rgba(220, 38, 38, 0.35);
+            flex-shrink: 0;
+            color: #ffffff;
+            font-size: 1.25rem;
+        }
+
+        .icon-btn {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+
+        .icon-btn:hover {
+            background-color: var(--surface-hover);
+            color: var(--text-primary);
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            padding: 8px 14px;
+            border-radius: var(--radius-sm);
+            font-weight: 600;
+            font-size: 0.82rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            text-decoration: none;
+        }
+
+        .btn-outline:hover {
+            background-color: var(--surface-hover);
+            border-color: var(--accent-color);
+        }
+
+        /* SPATIAL LAYOUT & RESIZABLE SIDEBAR */
+        .spatial-layout {
+            display: flex;
+            height: calc(100vh - 64px);
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .spatial-sidebar {
+            width: 410px;
+            min-width: 280px;
+            max-width: 650px;
+            height: 100%;
+            background: var(--bg-color);
+            display: flex;
+            flex-direction: column;
+            z-index: 10;
+            padding: 16px;
+            gap: 14px;
+            overflow-y: auto;
+            flex-shrink: 0;
+        }
+
+        /* GARIS HANDLE PENARIK LEBAR SIDEBAR */
+        .sidebar-resizer {
+            width: 6px;
+            height: 100%;
+            background-color: var(--border-color);
+            cursor: col-resize;
+            flex-shrink: 0;
+            position: relative;
+            z-index: 100;
+            transition: background-color 0.2s ease;
+        }
+
+        .sidebar-resizer:hover,
+        .sidebar-resizer.resizing {
+            background-color: var(--accent-color);
+        }
+
+        .sidebar-resizer::after {
+            content: "";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 2px;
+            height: 36px;
+            background-color: var(--text-secondary);
+            border-radius: 2px;
+            opacity: 0.65;
+        }
+
+        .sidebar-resizer:hover::after,
+        .sidebar-resizer.resizing::after {
+            background-color: #ffffff;
+            opacity: 1;
+        }
+
+        .sidebar-section {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        /* JUDUL SECTION DI LUAR KOTAK DENGAN IKON */
+        .outside-section-title {
+            font-size: 0.84rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            letter-spacing: 0.03em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 0 4px;
+        }
+
+        .outside-section-title i {
+            color: var(--accent-color);
+            font-size: 1.08rem;
+        }
+
+        .sidebar-box {
+            background: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 14px;
+            flex-shrink: 0;
+            box-shadow: var(--shadow-md);
+        }
+
+        /* WILAYAH KAJIAN BUTTON & DROPDOWN */
+        .region-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: 100%;
+        }
+
+        .region-btn {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: var(--bg-color);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 8px 12px;
+            border-radius: var(--radius-sm);
+            font-size: 0.78rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        .region-btn:hover {
+            background-color: var(--accent-bg);
+            border-color: var(--accent-color);
+            color: var(--accent-color);
+        }
+
+        .region-select-wrapper {
+            position: relative;
+            width: 100%;
+        }
+
+        .region-select {
+            width: 100%;
+            appearance: none;
+            -webkit-appearance: none;
+            background-color: var(--bg-color);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 8px 34px 8px 12px;
+            border-radius: var(--radius-sm);
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 0.78rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-align: center;
+            text-align-last: center;
+        }
+
+        .region-select:hover,
+        .region-select:focus {
+            background-color: var(--accent-bg);
+            border-color: var(--accent-color);
+            color: var(--accent-color);
+            outline: none;
+        }
+
+        .region-select option {
+            background-color: var(--surface-color);
+            color: var(--text-primary);
+            text-align: left;
+            font-weight: 500;
+        }
+
+        .region-select-icon {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            pointer-events: none;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        /* PARAMETER LAYER ACCORDION */
+        .param-group {
+            margin-bottom: 10px;
+            border-radius: var(--radius-md);
+            overflow: visible;
+        }
+
+        .param-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .param-group-btn {
+            width: 100%;
+            background-color: var(--bg-color);
+            border: 1px solid var(--border-color);
+            padding: 10px 14px;
+            font-size: 0.81rem;
+            color: var(--text-primary);
+            text-align: left;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            line-height: 1.3;
+        }
+
+        .param-group-btn:hover {
+            background-color: var(--surface-hover);
+            border-color: var(--accent-color);
+        }
+
+        .param-group-btn span {
+            flex: 1;
+            text-align: left;
+        }
+
+        .param-group-btn i {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            flex-shrink: 0;
+        }
+
+        .param-group-btn.is-open {
+            background-color: var(--accent-color) !important;
+            border-color: var(--accent-color) !important;
+            color: #ffffff !important;
+        }
+
+        .param-group-btn.is-open:hover {
+            background-color: var(--accent-hover) !important;
+            border-color: var(--accent-hover) !important;
+        }
+
+        .param-group-btn.is-open i {
+            color: #ffffff !important;
+        }
+
+        .param-group-content {
+            display: none;
+            flex-direction: column;
+            gap: 8px;
+            padding: 10px 2px 2px 2px;
+        }
+
+        .param-group-content.active {
+            display: flex;
+            animation: fadeIn 0.25s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* KARTU ITEM PARAMETER */
+        .param-item-card {
+            background-color: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            padding: 8px 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 7px;
+        }
+
+        .param-item-card:hover {
+            border-color: var(--accent-color);
+        }
+
+        .param-top-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        .param-check-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            font-size: 0.79rem;
+            font-weight: 500;
+            color: var(--text-primary);
+            user-select: none;
+            min-width: 0;
+            flex: 1;
+        }
+
+        .param-check-left span {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .param-check-left input[type="checkbox"] {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 15px;
+            height: 15px;
+            border: 1.5px dashed var(--text-secondary);
+            border-radius: 3px;
+            background: transparent;
+            cursor: pointer;
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .param-check-left input[type="checkbox"]:checked {
+            border: 1.5px solid var(--accent-color);
+            background-color: var(--accent-color);
+        }
+
+        .param-check-left input[type="checkbox"]:checked::after {
+            content: '✓';
+            position: absolute;
+            color: #ffffff;
+            font-size: 10px;
+            font-weight: 700;
+            top: -1px;
+            left: 2px;
+        }
+
+        /* SLIDER OPACITY KOMPAK DI POJOK KANAN ATAS + TOOLTIP ANGKA */
+        .top-opacity-control {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-shrink: 0;
+            width: 105px;
+        }
+
+        .top-opacity-control i {
+            color: var(--accent-color);
+            font-size: 0.82rem;
+            flex-shrink: 0;
+        }
+
+        .slider-track-wrap {
+            position: relative;
+            flex: 1;
+            display: flex;
+            align-items: center;
+        }
+
+        input[type="range"].mini-range {
+            width: 100%;
+            height: 4px;
+            accent-color: var(--accent-color);
+            cursor: pointer;
+        }
+
+        .slider-tooltip {
+            position: absolute;
+            bottom: calc(100% + 7px);
+            left: 80%;
+            transform: translateX(-50%);
+            background-color: var(--text-primary);
+            color: var(--bg-color);
+            font-size: 0.68rem;
+            font-weight: 700;
+            padding: 3px 7px;
+            border-radius: 4px;
+            white-space: nowrap;
+            pointer-events: none;
+            opacity: 0;
+            visibility: hidden;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.35);
+            z-index: 99;
+            transition: opacity 0.15s ease, visibility 0.15s ease;
+        }
+
+        .slider-tooltip::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border-width: 4px;
+            border-style: solid;
+            border-color: var(--text-primary) transparent transparent transparent;
+        }
+
+        .slider-track-wrap:hover .slider-tooltip,
+        .slider-track-wrap.dragging .slider-tooltip {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* BARIS BAWAH: PILIHAN TAHUN & BOBOT */
+        .param-bottom-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            padding-top: 6px;
+            border-top: 1px dashed var(--border-color);
+        }
+
+        .year-selector-wrap {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .year-label {
+            font-size: 0.69rem;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            flex-shrink: 0;
+        }
+
+        .year-label i {
+            color: var(--accent-color);
+            font-size: 0.82rem;
+        }
+
+        .year-chip-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 3px;
+        }
+
+        .year-chip {
+            background-color: var(--surface-color);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            font-size: 0.64rem;
+            font-weight: 600;
+            padding: 2px 5px;
+            border-radius: 4px;
+            line-height: 1.2;
+        }
+
+        .year-chip:hover {
+            border-color: var(--accent-color);
+            color: var(--text-primary);
+        }
+
+        .year-chip.active {
+            background-color: var(--accent-color);
+            border-color: var(--accent-color);
+            color: #ffffff;
+        }
+
+        .static-year-pill {
+            background-color: var(--surface-color);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            font-size: 0.65rem;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 4px;
+            line-height: 1.25;
+            user-select: none;
+        }
+
+        .static-year-pill.is-active {
+            background-color: var(--accent-color);
+            border-color: var(--accent-color);
+            color: #ffffff;
+        }
+
+        .weight-tag {
+            font-size: 0.67rem;
+            color: var(--text-secondary);
+            background: var(--surface-color);
+            border: 1px solid var(--border-color);
+            padding: 2px 6px;
+            border-radius: 4px;
+            flex-shrink: 0;
+        }
+
+        /* MAP AREA & CONTROLS */
+        .spatial-map-container {
+            flex: 1;
+            min-width: 0;
+            position: relative;
+            background: var(--bg-color);
+            height: 100%;
+        }
+
+        #spatialMap {
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            position: absolute;
+            inset: 0;
+        }
+
+        /* BILAH PENCARIAN LOKASI DI POJOK KANAN ATAS */
+        .map-search-box {
+            position: absolute;
+            top: 16px;
+            right: 202px;
+            z-index: 400;
+            width: 210px;
+        }
+
+        .map-search-input-wrap {
+            display: flex;
+            align-items: center;
+            height: 34px;
+            background-color: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: 999px;
+            padding: 5px 14px;
+            box-shadow: var(--shadow-md);
+            backdrop-filter: blur(4px);
+        }
+
+        .map-search-input-wrap:focus-within {
+            border-color: var(--accent-color);
+        }
+
+        .map-search-input-wrap input {
+            width: 100%;
+            border: none;
+            background: transparent;
+            color: var(--text-primary);
+            font-size: 0.78rem;
+            outline: none;
+        }
+
+        .map-search-input-wrap input::placeholder {
+            color: var(--text-secondary);
+            opacity: 0.85;
+        }
+
+        .map-search-input-wrap button {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            padding-left: 6px;
+        }
+
+        .map-search-input-wrap button:hover {
+            color: var(--accent-color);
+        }
+
+        .map-search-results {
+            position: absolute;
+            right: 0;
+            width: 240px;
+            z-index: 450;
+            margin-top: 6px;
+            background-color: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-md);
+            max-height: 210px;
+            overflow-y: auto;
+            display: none;
+        }
+
+        .map-search-results.open {
+            display: block;
+        }
+
+        .search-result-item {
+            padding: 8px 12px;
+            font-size: 0.75rem;
+            color: var(--text-primary);
+            border-bottom: 1px solid var(--border-color);
+            cursor: pointer;
+            line-height: 1.35;
+        }
+
+        .search-result-item:last-child {
+            border-bottom: none;
+        }
+
+        .search-result-item:hover {
+            background-color: var(--surface-hover);
+            color: var(--accent-color);
+        }
+
+        /* BASEMAP SWITCHER */
+        .basemap-control {
+            position: absolute;
+            top: 16px;
+            right: 60px;
+            z-index: 400;
+            background-color: var(--surface-color) !important;
+            border: 1px solid var(--border-color);
+            padding: 4px;
+            border-radius: 999px;
+            display: flex;
+            gap: 4px;
+            backdrop-filter: blur(4px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .basemap-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            padding: 5px 12px;
+            border-radius: 999px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .basemap-btn:hover {
+            color: var(--text-primary);
+            background: var(--surface-hover);
+        }
+
+        .basemap-btn.active {
+            background: var(--accent-color);
+            color: #ffffff;
+        }
+
+        /* TOMBOL ZOOM KAPSUL */
+        .leaflet-top.leaflet-right {
+            top: 16px !important;
+            right: 16px !important;
+        }
+
+        .leaflet-control-zoom.leaflet-bar {
+            border: 1px solid var(--border-color) !important;
+            box-shadow: var(--shadow-md) !important;
+            background-color: var(--surface-color) !important;
+            border-radius: 999px !important;
+            overflow: hidden !important;
+            margin: 0 !important;
+        }
+
+        .leaflet-control-zoom.leaflet-bar a {
+            background-color: var(--surface-color) !important;
+            color: var(--text-primary) !important;
+            border-bottom: 1px solid var(--border-color) !important;
+            width: 34px !important;
+            height: 34px !important;
+            line-height: 34px !important;
+            font-size: 1rem !important;
+            font-weight: 600 !important;
+        }
+
+        .leaflet-control-zoom.leaflet-bar a:last-child {
+            border-bottom: none !important;
+        }
+
+        .leaflet-control-zoom.leaflet-bar a:hover {
+            background-color: var(--surface-hover) !important;
+            color: var(--accent-color) !important;
+        }
+
+        /* SKALA PETA DI ATAS KOORDINAT */
+        .leaflet-bottom.leaflet-left {
+            bottom: 52px !important;
+            left: 16px !important;
+            margin: 0 !important;
+        }
+
+        .leaflet-control-scale {
+            margin: 0 !important;
+        }
+
+        .leaflet-control-scale-line {
+            width: max-content !important;
+            min-width: unset !important;
+            max-width: none !important;
+            white-space: nowrap !important;
+            box-sizing: border-box !important;
+            background-color: var(--surface-color) !important;
+            color: var(--text-primary) !important;
+            border: 1px solid var(--border-color) !important;
+            border-radius: 999px !important;
+            padding: 5px 14px !important;
+            font-family: 'IBM Plex Mono', monospace !important;
+            font-size: 0.74rem !important;
+            font-weight: 500 !important;
+            line-height: 1.2 !important;
+            text-align: center !important;
+            box-shadow: var(--shadow-md) !important;
+            backdrop-filter: blur(4px);
+            text-shadow: none !important;
+        }
+
+        /* PELACAK KOORDINAT */
+        .map-coord-tracker {
+            position: absolute;
+            bottom: 16px;
+            left: 16px;
+            z-index: 400;
+            background-color: var(--surface-color) !important;
+            color: var(--text-primary) !important;
+            border: 1px solid var(--border-color);
+            padding: 6px 14px;
+            border-radius: 999px;
+            font-size: 0.74rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            backdrop-filter: blur(4px);
+            box-shadow: var(--shadow-md);
+        }
+
+        /* MAP LEGEND BOX */
+        .map-legend {
+            position: absolute;
+            bottom: 28px;
+            right: 16px;
+            z-index: 400;
+            background-color: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 12px 14px;
+            min-width: 195px;
+            box-shadow: var(--shadow-md);
+        }
+
+        .legend-title {
+            font-family: 'Sora', sans-serif;
+            font-size: 0.76rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.74rem;
+            color: var(--text-secondary);
+            margin-bottom: 5px;
+        }
+
+        .legend-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .legend-swatch {
+            width: 14px;
+            height: 14px;
+            border-radius: 3px;
+            flex-shrink: 0;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: var(--surface-color);
+            color: var(--text-primary);
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 0.82rem;
+            display: none;
+            z-index: 1000;
+            border: 1px solid var(--accent-color);
+            box-shadow: var(--shadow-md);
+            font-weight: 500;
+        }
+
+        /* RESPONSIVE LAYAR SEMPIT / HP: PANEL ATAS SCROLL MANDIRI, PETA TETAP DIAM DI BAWAH */
+        @media (max-width: 900px) {
+            .spatial-layout {
+                flex-direction: column;
+                height: calc(100vh - 64px); /* Kunci tinggi total pas selayar penuh */
+                overflow: hidden;           /* Cegah seluruh halaman ikut tergulir */
+            }
+            .sidebar-resizer {
+                display: none;
+            }
+            .spatial-sidebar {
+                width: 100% !important;
+                min-width: 100%;
+                max-width: 100%;
+                height: auto;
+                max-height: 40vh;           /* Batasi tinggi panel atas maksimal 40% layar */
+                overflow-y: auto;           /* Aktifkan scroll khusus di dalam panel atas */
+                border-right: none;
+                border-bottom: 1px solid var(--border-color);
+                flex-shrink: 0;
+            }
+            .spatial-map-container {
+                flex: 1;                    /* Peta otomatis mengisi sisa 60% layar di bawahnya */
+                min-height: 0;
+                height: auto;
+            }
+            .map-search-box {
+                top: 62px;
+                right: 60px;
+                width: 134px;
+            }
+            .map-legend {
+                bottom: 64px;
+                right: 12px;
+            }
+        }   
+        /* Membuat kotak legenda bisa diklik */
+        .map-legend {
+            cursor: pointer;
+            transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .map-legend:hover {
+            border-color: var(--accent-color);
+            transform: translateY(-2px);
+        }
+
+        .legend-header-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            margin-bottom: 8px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .legend-header-row .legend-title {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+
+        .legend-info-hint {
+            color: var(--accent-color);
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+        }
+
+        /* ==========================================
+        MODAL WINDOW PENJELASAN TINGKAT BAHAYA
+        ========================================== */
+        .hazard-modal-overlay {
+            position: fixed;
+            inset: 0;
+            background-color: rgba(15, 5, 5, 0.65);
+            backdrop-filter: blur(4px);
+            z-index: 2000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .hazard-modal-overlay.open {
+            display: flex;
+        }
+
+        .hazard-modal-box {
+            background-color: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            width: 100%;
+            max-width: 1020px;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 24px;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+            position: relative;
+        }
+
+        .hazard-modal-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 18px;
+            padding-bottom: 14px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .hazard-modal-header h3 {
+            font-size: 1.15rem;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .hazard-modal-header h3 i {
+            color: var(--accent-color);
+            font-size: 1.3rem;
+        }
+
+        .hazard-modal-header p {
+            font-size: 0.82rem;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        .hazard-modal-close {
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            flex-shrink: 0;
+        }
+
+        .hazard-modal-close:hover {
+            background-color: var(--accent-color);
+            border-color: var(--accent-color);
+            color: #ffffff;
+        }
+
+        /* GRID 4 KARTU SKOR (SESUAI REFERENSI GAMBAR) */
+        .hazard-cards-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 14px;
+        }
+
+        .hazard-detail-card {
+            background-color: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 16px 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .hazard-top-bar {
+            width: 100%;
+            height: 5px;
+            border-radius: 99px;
+        }
+
+        .hazard-card-title-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 6px;
+        }
+
+        .hazard-card-title {
+            font-family: 'Sora', sans-serif;
+            font-size: 0.78rem;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+        }
+
+        .hazard-index-pill {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.74rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            background-color: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            padding: 5px 10px;
+            text-align: center;
+        }
+
+        .hazard-card-desc {
+            font-size: 0.78rem;
+            color: var(--text-secondary);
+            line-height: 1.55;
+        }
+
+        /* Warna Khusus Masing-Masing Skor */
+        .card-skor-1 .hazard-top-bar { background-color: #16a34a; }
+        .card-skor-1 .hazard-card-title,
+        .card-skor-1 i { color: #16a34a; }
+
+        .card-skor-2 .hazard-top-bar { background-color: #84cc16; }
+        .card-skor-2 .hazard-card-title,
+        .card-skor-2 i { color: #65a30d; }
+
+        .card-skor-3 .hazard-top-bar { background-color: #f97316; }
+        .card-skor-3 .hazard-card-title,
+        .card-skor-3 i { color: #ea580c; }
+
+        .card-skor-4 .hazard-top-bar { background-color: #dc2626; }
+        .card-skor-4 .hazard-card-title,
+        .card-skor-4 i { color: #dc2626; }
+
+        @media (max-width: 900px) {
+            .hazard-cards-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 540px) {
+            .hazard-cards-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header class="navbar">
+        <div class="nav-left">
+            <a class="logo" href="DASHBOARD_3.html" onclick="window.location.reload(); return false;">
+                <div class="logo-icon custom-logo">
+                    <img src="LOGO.png" alt="Logo WebGIS">
+                </div>
+                <span>WebGIS</span>
+            </a>
+            <a href="LANDING.html" class="btn-outline">
+                <i class="ph ph-arrow-left"></i> Beranda
+            </a>
+        </div>
+
+        <div class="nav-right">
+            <button class="icon-btn" id="themeToggle" title="Ganti Mode Tampilan">
+                <i class="ph ph-moon" id="themeIcon"></i>
+            </button>
+        </div>
+    </header>
+
+    <div class="spatial-layout">
+        
+        <aside class="spatial-sidebar" id="spatialSidebar">
+            
+            <!-- 1. NAVIGASI WILAYAH KAJIAN -->
+            <div class="sidebar-section">
+                <div class="outside-section-title">
+                    <i class="ph ph-map-pin"></i>
+                    <span>Wilayah Kajian</span>
+                </div>
+                <div class="sidebar-box">
+                    <div class="region-grid">
+                        <button type="button" class="region-btn" onclick="zoomToRegion('kalbar', true)">
+                            Provinsi Kalimantan Barat
+                        </button>
+
+                        <div class="region-select-wrapper">
+                            <select id="kabKotaSelect" class="region-select" onchange="zoomToRegion(this.value, false)">
+                                <option value="" disabled selected>Pilih Kabupaten / Kota (14)</option>
+                                <optgroup label="12 Kabupaten">
+                                    <option value="bengkayang">Kab. Bengkayang</option>
+                                    <option value="kapuashulu">Kab. Kapuas Hulu</option>
+                                    <option value="kayongutara">Kab. Kayong Utara</option>
+                                    <option value="ketapang">Kab. Ketapang</option>
+                                    <option value="kuburaya">Kab. Kubu Raya</option>
+                                    <option value="landak">Kab. Landak</option>
+                                    <option value="melawi">Kab. Melawi</option>
+                                    <option value="mempawah">Kab. Mempawah</option>
+                                    <option value="sambas">Kab. Sambas</option>
+                                    <option value="sanggau">Kab. Sanggau</option>
+                                    <option value="sekadau">Kab. Sekadau</option>
+                                    <option value="sintang">Kab. Sintang</option>
+                                </optgroup>
+                                <optgroup label="2 Kota">
+                                    <option value="pontianak">Kota Pontianak</option>
+                                    <option value="singkawang">Kota Singkawang</option>
+                                </optgroup>
+                            </select>
+                            <i class="ph ph-caret-down region-select-icon"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. KONTROL PARAMETER LAYER (11 PARAMETER AHP) -->
+            <div class="sidebar-section">
+                <div class="outside-section-title">
+                    <i class="ph ph-stack"></i>
+                    <span>Parameter Layer</span>
+                </div>
+
+                <div class="sidebar-box">
+                    <!-- KRITERIA 1: BIOFISIK & BAHAN BAKAR -->
+                    <div class="param-group">
+                        <button type="button" class="param-group-btn" onclick="toggleParamGroup('grpBiofisik', this)">
+                            <span>Biofisik & Bahan Bakar</span>
+                            <i class="ph ph-caret-down"></i>
+                        </button>
+                        <div class="param-group-content" id="grpBiofisik">
+                            
+                            <!-- P01: Sebaran Lahan Gambut -->
+                            <div class="param-item-card" data-layer="sebaran_gambut" data-type="static" data-year="2019" data-opacity="80">
+                                <div class="param-top-row">
+                                    <label class="param-check-left">
+                                        <input type="checkbox" onchange="toggleParameterLayer('sebaran_gambut', this)">
+                                        <span>Sebaran lahan gambut</span>
+                                    </label>
+                                    <div class="top-opacity-control" title="Transparansi Layer">
+                                        <i class="ph ph-drop-half-bottom"></i>
+                                        <div class="slider-track-wrap">
+                                            <div class="slider-tooltip">80</div>
+                                            <input type="range" class="mini-range" min="0" max="100" value="80" oninput="handleParamOpacity(this, 'sebaran_gambut')">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="param-bottom-row">
+                                    <div class="year-selector-wrap">
+                                        <span class="year-label"><i class="ph ph-calendar-blank"></i> Data:</span>
+                                        <span class="static-year-pill">GFW 2019</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- P02: Tutupan Lahan -->
+                            <div class="param-item-card" data-layer="tutupan_lahan" data-type="static" data-year="2021" data-opacity="80">
+                                <div class="param-top-row">
+                                    <label class="param-check-left">
+                                        <input type="checkbox" onchange="toggleParameterLayer('tutupan_lahan', this)">
+                                        <span>Tutupan lahan</span>
+                                    </label>
+                                    <div class="top-opacity-control" title="Transparansi Layer">
+                                        <i class="ph ph-drop-half-bottom"></i>
+                                        <div class="slider-track-wrap">
+                                            <div class="slider-tooltip">80</div>
+                                            <input type="range" class="mini-range" min="0" max="100" value="80" oninput="handleParamOpacity(this, 'tutupan_lahan')">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="param-bottom-row">
+                                    <div class="year-selector-wrap">
+                                        <span class="year-label"><i class="ph ph-calendar-blank"></i> Data:</span>
+                                        <span class="static-year-pill">ESA 2021</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- P03: NDMI -->
+                            <div class="param-item-card" data-layer="ndmi" data-type="multi" data-year="2025" data-opacity="80">
+                                <div class="param-top-row">
+                                    <label class="param-check-left">
+                                        <input type="checkbox" onchange="toggleParameterLayer('ndmi', this)">
+                                        <span>Kelembapan tajuk (NDMI)</span>
+                                    </label>
+                                    <div class="top-opacity-control" title="Transparansi Layer">
+                                        <i class="ph ph-drop-half-bottom"></i>
+                                        <div class="slider-track-wrap">
+                                            <div class="slider-tooltip">80</div>
+                                            <input type="range" class="mini-range" min="0" max="100" value="80" oninput="handleParamOpacity(this, 'ndmi')">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="param-bottom-row">
+                                    <div class="year-selector-wrap">
+                                        <span class="year-label"><i class="ph ph-calendar-blank"></i> Tahun:</span>
+                                        <div class="year-chip-list">
+                                            <button type="button" class="year-chip" onclick="selectParamYear(this, 'ndmi', '2015')">2015</button>
+                                            <button type="button" class="year-chip" onclick="selectParamYear(this, 'ndmi', '2016')">2016</button>
+                                            <button type="button" class="year-chip" onclick="selectParamYear(this, 'ndmi', '2017')">2017</button>
+                                            <button type="button" class="year-chip" onclick="selectParamYear(this, 'ndmi', '2018')">2018</button>
+                                            <button type="button" class="year-chip" onclick="selectParamYear(this, 'ndmi', '2019')">2019</button>
+                                            <button type="button" class="year-chip" onclick="selectParamYear(this, 'ndmi', '2020')">2020</button>
+                                            <button type="button" class="year-chip" onclick="selectParamYear(this, 'ndmi', '2021')">2021</button>
+                                            <button type="button" class="year-chip" onclick="selectParamYear(this, 'ndmi', '2022')">2022</button>
+                                            <button type="button" class="year-chip" onclick="selectParamYear(this, 'ndmi', '2023')">2023</button>
+                                            <button type="button" class="year-chip" onclick="selectParamYear(this, 'ndmi', '2024')">2024</button>
+                                            <button type="button" class="year-chip active" onclick="selectParamYear(this, 'ndmi', '2025')">2025</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- P04: NDVI -->
+                            <div class="param-item-card" data-layer="ndvi" data-type="multi" data-year="2025" data-opacity="80">
+                                <div class="param-top-row">
+                                    <label class="param-check-left">
+                                        <input type="checkbox" onchange="toggleParameterLayer('ndvi', this)">
+                                        <span>Kerapatan vegetasi (NDVI)</span>
+                                    </label>
+                                    <div class="top-opacity-control" title="Transparansi Layer">
+                                        <i class="ph ph-drop-half-bottom"></i>
+                                        <div class="slider-track-wrap">
+                                            <div class="slider-tooltip">80</div>
+                                            <input type="range" class="mini-range" min="0" max="100" value="80" oninput="handleParamOpacity(this, 'ndvi')">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="param-bottom-row">
+                                    <div class="year-selector-wrap">
+                                        <span class="year-label"><i class="ph ph-calendar-blank"></i> Tahun:</span>
+                                        <div class="year-chip-list">
+                                            <button type="button" class="year-chip" onclick="selectParamYear(this, 'ndvi', '2015')">2015</button>
+                                            <button type="button" class="year-chip" onclick="selectParamYear(this, 'ndvi', '2016')">2016</button>
+                                            <button type="button" class="year-chip" onclick="selectParamYear(this, 'ndvi', '2017')">2017</button>
+                                            <button type="button" class="year-chip" onclick="selectParamYear(this, 'ndvi', '2018')">2018</button>
+                                            <button type="button" class="year-chip" onclick="selectParamYear(this, 'ndvi', '2019')">2019</button>
+                                            <button type="button" class="year-chip" onclick="selectParamYear(this, 'ndvi', '2020')">2020</button>
+                                            <button type="button" class="year-chip" onclick="selectParamYear(this, 'ndvi', '2021')">2021</button>
+                                            <button type="button" class="year-chip" onclick="selectParamYear(this, 'ndvi', '2022')">2022</button>
+                                            <button type="button" class="year-chip" onclick="selectParamYear(this, 'ndvi', '2023')">2023</button>
+                                            <button type="button" class="year-chip" onclick="selectParamYear(this, 'ndvi', '2024')">2024</button>
+                                            <button type="button" class="year-chip active" onclick="selectParamYear(this, 'ndvi', '2025')">2025</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- P05: NBR -->
+                            <div class="param-item-card" data-layer="nbr" data-type="multi" data-year="2025" data-opacity="80">
+                                <div class="param-top-row">
+                                    <label class="param-check-left">
+                                        <input type="checkbox" onchange="toggleParameterLayer('nbr', this)">
+                                        <span>Keparahan terbakar (NBR)</span>
+                                    </label>
+                                    <div class="top-opacity-control" title="Transparansi Layer">
+                                        <i class="ph ph-drop-half-bottom"></i>
+                                        <div class="slider-track-wrap">
+                                            <div class="slider-tooltip">80</div>
+                                            <input type="range" class="mini-range" min="0" max="100" value="80" oninput="handleParamOpacity(this, 'nbr')">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="param-bottom-row">
+                                    <div class="year-selector-wrap">
+                                        <span class="year-label"><i class="ph ph-calendar-blank"></i> Tahun:</span>
+                                        <div class="year-chip-list">
+                                            <button type="button" class="year-chip" onclick="selectParamYear(this, 'nbr', '2015')">2015</button>
+                                            <button type="button" class="year-chip" onclick="selectParamYear(this, 'nbr', '2016')">2016</button>
+                                            <button type="button" class="year-chip" onclick="selectParamYear(this, 'nbr', '2017')">2017</button>
+                                            <button type="button" class="year-chip" onclick="selectParamYear(this, 'nbr', '2018')">2018</button>
+                                            <button type="button" class="year-chip" onclick="selectParamYear(this, 'nbr', '2019')">2019</button>
+                                            <button type="button" class="year-chip" onclick="selectParamYear(this, 'nbr', '2020')">2020</button>
+                                            <button type="button" class="year-chip" onclick="selectParamYear(this, 'nbr', '2021')">2021</button>
+                                            <button type="button" class="year-chip" onclick="selectParamYear(this, 'nbr', '2022')">2022</button>
+                                            <button type="button" class="year-chip" onclick="selectParamYear(this, 'nbr', '2023')">2023</button>
+                                            <button type="button" class="year-chip" onclick="selectParamYear(this, 'nbr', '2024')">2024</button>
+                                            <button type="button" class="year-chip active" onclick="selectParamYear(this, 'nbr', '2025')">2025</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <!-- KRITERIA 2: ANTROPOGENIK & PEMICU -->
+                    <div class="param-group">
+                        <button type="button" class="param-group-btn" onclick="toggleParamGroup('grpAntropogenik', this)">
+                            <span>Antropogenik & Pemicu</span>
+                            <i class="ph ph-caret-down"></i>
+                        </button>
+                        <div class="param-group-content" id="grpAntropogenik">
+                            
+                            <!-- P06: Jarak ke Permukiman -->
+                            <div class="param-item-card" data-layer="permukiman" data-type="static" data-year="RBI 50K" data-opacity="80">
+                                <div class="param-top-row">
+                                    <label class="param-check-left">
+                                        <input type="checkbox" onchange="toggleParameterLayer('permukiman', this)">
+                                        <span>Jarak ke permukiman</span>
+                                    </label>
+                                    <div class="top-opacity-control" title="Transparansi Layer">
+                                        <i class="ph ph-drop-half-bottom"></i>
+                                        <div class="slider-track-wrap">
+                                            <div class="slider-tooltip">80</div>
+                                            <input type="range" class="mini-range" min="0" max="100" value="80" oninput="handleParamOpacity(this, 'permukiman')">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="param-bottom-row">
+                                    <div class="year-selector-wrap">
+                                        <span class="year-label"><i class="ph ph-calendar-blank"></i> Data:</span>
+                                        <span class="static-year-pill">RBI 50K</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- P07: Jarak ke Jaringan Jalan -->
+                            <div class="param-item-card" data-layer="jaringan_jalan" data-type="static" data-year="RBI 50K" data-opacity="80">
+                                <div class="param-top-row">
+                                    <label class="param-check-left">
+                                        <input type="checkbox" onchange="toggleParameterLayer('jaringan_jalan', this)">
+                                        <span>Jarak ke jaringan jalan</span>
+                                    </label>
+                                    <div class="top-opacity-control" title="Transparansi Layer">
+                                        <i class="ph ph-drop-half-bottom"></i>
+                                        <div class="slider-track-wrap">
+                                            <div class="slider-tooltip">80</div>
+                                            <input type="range" class="mini-range" min="0" max="100" value="80" oninput="handleParamOpacity(this, 'jaringan_jalan')">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="param-bottom-row">
+                                    <div class="year-selector-wrap">
+                                        <span class="year-label"><i class="ph ph-calendar-blank"></i> Data:</span>
+                                        <span class="static-year-pill">RBI 50K</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <!-- KRITERIA 3: IKLIM, HIDROLOGI & TOPOGRAFI -->
+                    <div class="param-group">
+                        <button type="button" class="param-group-btn" onclick="toggleParamGroup('grpIklim', this)">
+                            <span>Iklim, Hidrologi & Topografi</span>
+                            <i class="ph ph-caret-down"></i>
+                        </button>
+                        <div class="param-group-content" id="grpIklim">
+                            
+                            <!-- P08: Temperatur LST -->
+                            <div class="param-item-card" data-layer="temperatur" data-type="multi" data-year="2025" data-opacity="80">
+                                <div class="param-top-row">
+                                    <label class="param-check-left">
+                                        <input type="checkbox" onchange="toggleParameterLayer('temperatur', this)">
+                                        <span>Temperatur permukaan (LST)</span>
+                                    </label>
+                                    <div class="top-opacity-control" title="Transparansi Layer">
+                                        <i class="ph ph-drop-half-bottom"></i>
+                                        <div class="slider-track-wrap">
+                                            <div class="slider-tooltip">80</div>
+                                            <input type="range" class="mini-range" min="0" max="100" value="80" oninput="handleParamOpacity(this, 'temperatur')">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="param-bottom-row">
+                                    <div class="year-selector-wrap">
+                                        <span class="year-label"><i class="ph ph-calendar-blank"></i> Tahun:</span>
+                                        <div class="year-chip-list">
+                                            <button type="button" class="year-chip" onclick="selectParamYear(this, 'temperatur', '2015')">2015</button>
+                                            <button type="button" class="year-chip" onclick="selectParamYear(this, 'temperatur', '2016')">2016</button>
+                                            <button type="button" class="year-chip" onclick="selectParamYear(this, 'temperatur', '2017')">2017</button>
+                                            <button type="button" class="year-chip" onclick="selectParamYear(this, 'temperatur', '2018')">2018</button>
+                                            <button type="button" class="year-chip" onclick="selectParamYear(this, 'temperatur', '2019')">2019</button>
+                                            <button type="button" class="year-chip" onclick="selectParamYear(this, 'temperatur', '2020')">2020</button>
+                                            <button type="button" class="year-chip" onclick="selectParamYear(this, 'temperatur', '2021')">2021</button>
+                                            <button type="button" class="year-chip" onclick="selectParamYear(this, 'temperatur', '2022')">2022</button>
+                                            <button type="button" class="year-chip" onclick="selectParamYear(this, 'temperatur', '2023')">2023</button>
+                                            <button type="button" class="year-chip" onclick="selectParamYear(this, 'temperatur', '2024')">2024</button>
+                                            <button type="button" class="year-chip active" onclick="selectParamYear(this, 'temperatur', '2025')">2025</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- P09: Jarak Badan Air -->
+                            <div class="param-item-card" data-layer="badan_air" data-type="static" data-year="RBI 50K" data-opacity="80">
+                                <div class="param-top-row">
+                                    <label class="param-check-left">
+                                        <input type="checkbox" onchange="toggleParameterLayer('badan_air', this)">
+                                        <span>Jarak ke badan air</span>
+                                    </label>
+                                    <div class="top-opacity-control" title="Transparansi Layer">
+                                        <i class="ph ph-drop-half-bottom"></i>
+                                        <div class="slider-track-wrap">
+                                            <div class="slider-tooltip">80</div>
+                                            <input type="range" class="mini-range" min="0" max="100" value="80" oninput="handleParamOpacity(this, 'badan_air')">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="param-bottom-row">
+                                    <div class="year-selector-wrap">
+                                        <span class="year-label"><i class="ph ph-calendar-blank"></i> Data:</span>
+                                        <span class="static-year-pill">RBI 50K</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- P10: Kemiringan Lereng -->
+                            <div class="param-item-card" data-layer="slope" data-type="static" data-year="SRTM 30m" data-opacity="80">
+                                <div class="param-top-row">
+                                    <label class="param-check-left">
+                                        <input type="checkbox" onchange="toggleParameterLayer('slope', this)">
+                                        <span>Kemiringan lereng (Slope)</span>
+                                    </label>
+                                    <div class="top-opacity-control" title="Transparansi Layer">
+                                        <i class="ph ph-drop-half-bottom"></i>
+                                        <div class="slider-track-wrap">
+                                            <div class="slider-tooltip">80</div>
+                                            <input type="range" class="mini-range" min="0" max="100" value="80" oninput="handleParamOpacity(this, 'slope')">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="param-bottom-row">
+                                    <div class="year-selector-wrap">
+                                        <span class="year-label"><i class="ph ph-calendar-blank"></i> Data:</span>
+                                        <span class="static-year-pill">SRTM 30m</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- P11: Elevasi Permukaan -->
+                            <div class="param-item-card" data-layer="elevasi" data-type="static" data-year="SRTM 30m" data-opacity="80">
+                                <div class="param-top-row">
+                                    <label class="param-check-left">
+                                        <input type="checkbox" onchange="toggleParameterLayer('elevasi', this)">
+                                        <span>Elevasi permukaan</span>
+                                    </label>
+                                    <div class="top-opacity-control" title="Transparansi Layer">
+                                        <i class="ph ph-drop-half-bottom"></i>
+                                        <div class="slider-track-wrap">
+                                            <div class="slider-tooltip">80</div>
+                                            <input type="range" class="mini-range" min="0" max="100" value="80" oninput="handleParamOpacity(this, 'elevasi')">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="param-bottom-row">
+                                    <div class="year-selector-wrap">
+                                        <span class="year-label"><i class="ph ph-calendar-blank"></i> Data:</span>
+                                        <span class="static-year-pill">SRTM 30m</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. HASIL MODEL & ANALISIS DAMPAK -->
+            <div class="sidebar-section">
+                <div class="outside-section-title">
+                    <i class="ph ph-fire"></i>
+                    <span>Hasil Model & Analisis Dampak</span>
+                </div>
+
+                <div class="sidebar-box">
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                        
+                        <!-- Peta Bahaya Karhutla -->
+                        <div class="param-item-card" data-layer="bahaya_karhutla" data-type="multi" data-year="2025" data-opacity="80">
+                            <div class="param-top-row">
+                                <label class="param-check-left">
+                                    <input type="checkbox" checked onchange="toggleParameterLayer('bahaya_karhutla', this)">
+                                    <span>Peta Bahaya Karhutla</span>
+                                </label>
+                                <div class="top-opacity-control" title="Transparansi Layer">
+                                    <i class="ph ph-drop-half-bottom"></i>
+                                    <div class="slider-track-wrap">
+                                        <div class="slider-tooltip">80</div>
+                                        <input type="range" class="mini-range" min="0" max="100" value="80" oninput="handleParamOpacity(this, 'bahaya_karhutla')">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="param-bottom-row">
+                                <div class="year-selector-wrap">
+                                    <span class="year-label"><i class="ph ph-calendar-blank"></i> Tahun:</span>
+                                    <div class="year-chip-list">
+                                        <button type="button" class="year-chip" onclick="selectParamYear(this, 'bahaya_karhutla', '2015')">2015</button>
+                                        <button type="button" class="year-chip" onclick="selectParamYear(this, 'bahaya_karhutla', '2016')">2016</button>
+                                        <button type="button" class="year-chip" onclick="selectParamYear(this, 'bahaya_karhutla', '2017')">2017</button>
+                                        <button type="button" class="year-chip" onclick="selectParamYear(this, 'bahaya_karhutla', '2018')">2018</button>
+                                        <button type="button" class="year-chip" onclick="selectParamYear(this, 'bahaya_karhutla', '2019')">2019</button>
+                                        <button type="button" class="year-chip" onclick="selectParamYear(this, 'bahaya_karhutla', '2020')">2020</button>
+                                        <button type="button" class="year-chip" onclick="selectParamYear(this, 'bahaya_karhutla', '2021')">2021</button>
+                                        <button type="button" class="year-chip" onclick="selectParamYear(this, 'bahaya_karhutla', '2022')">2022</button>
+                                        <button type="button" class="year-chip" onclick="selectParamYear(this, 'bahaya_karhutla', '2023')">2023</button>
+                                        <button type="button" class="year-chip" onclick="selectParamYear(this, 'bahaya_karhutla', '2024')">2024</button>
+                                        <button type="button" class="year-chip active" onclick="selectParamYear(this, 'bahaya_karhutla', '2025')">2025</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Titik Panas FIRMS -->
+                        <div class="param-item-card" data-layer="hotspot" data-type="multi" data-year="2025" data-opacity="85">
+                            <div class="param-top-row">
+                                <label class="param-check-left">
+                                    <input type="checkbox" onchange="toggleParameterLayer('hotspot', this)">
+                                    <span>Titik Panas FIRMS</span>
+                                </label>
+                                <div class="top-opacity-control" title="Transparansi Layer">
+                                    <i class="ph ph-drop-half-bottom"></i>
+                                    <div class="slider-track-wrap">
+                                        <div class="slider-tooltip">85</div>
+                                        <input type="range" class="mini-range" min="0" max="100" value="85" oninput="handleParamOpacity(this, 'hotspot')">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="param-bottom-row">
+                                <div class="year-selector-wrap">
+                                    <span class="year-label"><i class="ph ph-calendar-blank"></i> Tahun:</span>
+                                    <div class="year-chip-list">
+                                        <button type="button" class="year-chip" onclick="selectParamYear(this, 'hotspot', '2015')">2015</button>
+                                        <button type="button" class="year-chip" onclick="selectParamYear(this, 'hotspot', '2016')">2016</button>
+                                        <button type="button" class="year-chip" onclick="selectParamYear(this, 'hotspot', '2017')">2017</button>
+                                        <button type="button" class="year-chip" onclick="selectParamYear(this, 'hotspot', '2018')">2018</button>
+                                        <button type="button" class="year-chip" onclick="selectParamYear(this, 'hotspot', '2019')">2019</button>
+                                        <button type="button" class="year-chip" onclick="selectParamYear(this, 'hotspot', '2020')">2020</button>
+                                        <button type="button" class="year-chip" onclick="selectParamYear(this, 'hotspot', '2021')">2021</button>
+                                        <button type="button" class="year-chip" onclick="selectParamYear(this, 'hotspot', '2022')">2022</button>
+                                        <button type="button" class="year-chip" onclick="selectParamYear(this, 'hotspot', '2023')">2023</button>
+                                        <button type="button" class="year-chip" onclick="selectParamYear(this, 'hotspot', '2024')">2024</button>
+                                        <button type="button" class="year-chip active" onclick="selectParamYear(this, 'hotspot', '2025')">2025</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+        </aside>
+
+        <!-- GARIS PENARIK LEBAR SIDEBAR -->
+        <div class="sidebar-resizer" id="sidebarResizer" title="Geser untuk mengatur lebar panel"></div>
+
+        <main class="spatial-map-container">
+            <div id="spatialMap"></div>
+
+            <!-- PENCARIAN LOKASI (AUTOCOMPLETE) -->
+            <div class="map-search-box">
+                <div class="map-search-input-wrap">
+                    <input
+                        type="text"
+                        id="locationSearchInput"
+                        placeholder="Cari lokasi..."
+                        oninput="handleSearchInput(this.value)"
+                        onkeydown="if(event.key === 'Enter') searchMapLocation()"
+                    />
+                    <button type="button" onclick="searchMapLocation()" title="Cari Lokasi">
+                        <i class="ph ph-magnifying-glass"></i>
+                    </button>
+                </div>
+                <div class="map-search-results" id="locationSearchResults"></div>
+            </div>
+
+            <!-- BASEMAP SWITCHER -->
+            <div class="basemap-control">
+                <button type="button" class="basemap-btn active" onclick="setBasemap('satellite', this)">Satelit</button>
+                <button type="button" class="basemap-btn" onclick="setBasemap('streets', this)">Streets</button>
+            </div>
+
+            <!-- PELACAK KOORDINAT -->
+            <div class="map-coord-tracker">
+                <i class="ph ph-crosshair" style="color: var(--accent-color);"></i>
+                <span id="coordTrackerText">Lat: - | Lng: -</span>
+            </div>
+
+            <!-- LEGENDA SKOR KERAWANAN (1 - 4) -->
+            <div class="map-legend" onclick="openHazardModal()" title="Klik untuk melihat penjelasan detail setiap skor bahaya">
+                <div class="legend-header-row">
+                    <div class="legend-title">Tingkat Bahaya Karhutla</div>
+                    <span class="legend-info-hint"><i class="ph-fill ph-info"></i></span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-swatch" style="background: #16a34a;"></span>
+                    <span>Skor 1 — Rendah</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-swatch" style="background: #eab308;"></span>
+                    <span>Skor 2 — Sedang</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-swatch" style="background: #f97316;"></span>
+                    <span>Skor 3 — Tinggi</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-swatch" style="background: #dc2626;"></span>
+                    <span>Skor 4 — Sangat Tinggi</span>
+                </div>
+            </div>
+            <!-- MODAL WINDOW PENJELASAN TINGKAT BAHAYA KARHUTLA -->
+            <div class="hazard-modal-overlay" id="hazardModalOverlay" onclick="if(event.target === this) closeHazardModal()">
+                <div class="hazard-modal-box">
+                    <div class="hazard-modal-header">
+                        <div>
+                            <h3><i class="ph-fill ph-fire"></i> Klasifikasi Tingkat Bahaya Karhutla</h3>
+                            <p>Rentang indeks akhir hasil pembobotan AHP &amp; <em>Weighted Overlay</em> serta karakteristik kondisi lahannya.</p>
+                        </div>
+                        <button type="button" class="hazard-modal-close" onclick="closeHazardModal()" title="Tutup Jendela">
+                            <i class="ph ph-x"></i>
+                        </button>
+                    </div>
+
+                    <div class="hazard-cards-grid">
+                        <!-- KARTU SKOR 1 -->
+                        <div class="hazard-detail-card card-skor-1">
+                            <div class="hazard-top-bar"></div>
+                            <div class="hazard-card-title-row">
+                                <span class="hazard-card-title">SKOR 1 &bull; BAHAYA RENDAH</span>
+                                <i class="ph-fill ph-shield-check"></i>
+                            </div>
+                            <div class="hazard-index-pill">Indeks Akhir: 1,00 – 1,75</div>
+                            <p class="hazard-card-desc">
+                                Kondisi paling aman. Area non-gambut, tajuk sangat lembap (NDMI &gt; 0,40), suhu rendah, atau jauh dari pemicu api.
+                            </p>
+                        </div>
+
+                        <!-- KARTU SKOR 2 -->
+                        <div class="hazard-detail-card card-skor-2">
+                            <div class="hazard-top-bar"></div>
+                            <div class="hazard-card-title-row">
+                                <span class="hazard-card-title">SKOR 2 &bull; BAHAYA SEDANG</span>
+                                <i class="ph-fill ph-info"></i>
+                            </div>
+                            <div class="hazard-index-pill">Indeks Akhir: 1,76 – 2,50</div>
+                            <p class="hazard-card-desc">
+                                Kerawanan moderat. Memiliki potensi terbakar pada musim kemarau panjang apabila terjadi penurunan kelembapan tajuk dan pembukaan lahan.
+                            </p>
+                        </div>
+
+                        <!-- KARTU SKOR 3 -->
+                        <div class="hazard-detail-card card-skor-3">
+                            <div class="hazard-top-bar"></div>
+                            <div class="hazard-card-title-row">
+                                <span class="hazard-card-title">SKOR 3 &bull; BAHAYA TINGGI</span>
+                                <i class="ph-fill ph-warning"></i>
+                            </div>
+                            <div class="hazard-index-pill">Indeks Akhir: 2,51 – 3,25</div>
+                            <p class="hazard-card-desc">
+                                Kerawanan tinggi. Kombinasi vegetasi stres air, suhu permukaan tinggi (28–35 &deg;C), serta kedekatan dengan jalan atau permukiman.
+                            </p>
+                        </div>
+
+                        <!-- KARTU SKOR 4 -->
+                        <div class="hazard-detail-card card-skor-4">
+                            <div class="hazard-top-bar"></div>
+                            <div class="hazard-card-title-row">
+                                <span class="hazard-card-title">SKOR 4 &bull; SANGAT TINGGI</span>
+                                <i class="ph-fill ph-fire"></i>
+                            </div>
+                            <div class="hazard-index-pill">Indeks Akhir: 3,26 – 4,00</div>
+                            <p class="hazard-card-desc">
+                                Zona kritis paling rawan terbakar. Didominasi gambut kering (NDMI &lt; 0,00), biomassa rapat, dan tekanan antropogenik tinggi.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+    </div>
+
+    <div class="toast" id="toast">Notifikasi Layer</div>
+
+    <script>
+        let spatialMap, currentBasemapLayer;
+        let searchMarker = null;
+        let searchDebounceTimer = null;
+
+        const basemaps = {
+            satellite: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+            streets: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
+        };
+
+        const focusRegions = {
+            kalbar:      { center: [-0.4500, 110.6000], zoom: 8,  label: 'Provinsi Kalimantan Barat' },
+            bengkayang:  { center: [1.0250, 109.4083],  zoom: 12, label: 'Kabupaten Bengkayang' },
+            kapuashulu:  { center: [-0.4500, 112.7500], zoom: 12, label: 'Kabupaten Kapuas Hulu' },
+            kayongutara: { center: [-1.2472, 109.5458], zoom: 12, label: 'Kabupaten Kayong Utara' },
+            ketapang:    { center: [-1.7000, 109.9833], zoom: 12, label: 'Kabupaten Ketapang' },
+            kuburaya:    { center: [-0.6214, 109.5076], zoom: 12, label: 'Kabupaten Kubu Raya' },
+            landak:      { center: [0.0667, 109.6725],  zoom: 12, label: 'Kabupaten Landak' },
+            melawi:      { center: [-0.8150, 111.8000], zoom: 12, label: 'Kabupaten Melawi' },
+            mempawah:    { center: [0.3633, 108.8792],  zoom: 12, label: 'Kabupaten Mempawah' },
+            sambas:      { center: [1.3417, 109.3583],  zoom: 12, label: 'Kabupaten Sambas' },
+            sanggau:     { center: [0.4500, 110.0917],  zoom: 12, label: 'Kabupaten Sanggau' },
+            sekadau:     { center: [-0.0503, 110.9238], zoom: 12, label: 'Kabupaten Sekadau' },
+            sintang:     { center: [0.1583, 112.0833],  zoom: 12, label: 'Kabupaten Sintang' },
+            pontianak:   { center: [-0.0268, 109.3286], zoom: 12, label: 'Kota Pontianak' },
+            singkawang:  { center: [0.8815, 109.0164],  zoom: 12, label: 'Kota Singkawang' }
+        };
+
+        const parameterLayers = {
+            sebaran_gambut: null,
+            tutupan_lahan: null,
+            ndmi: null,
+            ndvi: null,
+            nbr: null,
+            permukiman: null,
+            jaringan_jalan: null,
+            temperatur: null,
+            badan_air: null,
+            slope: null,
+            elevasi: null,
+            bahaya_karhutla: null,
+            hotspot: null,
+            safety_map: null
+        };
+
+        const layerStates = {};
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            const icon = document.getElementById('themeIcon');
+            if (icon) icon.className = savedTheme === 'dark' ? 'ph ph-sun' : 'ph ph-moon';
+
+            const themeToggleBtn = document.getElementById('themeToggle');
+            if (themeToggleBtn) {
+                themeToggleBtn.addEventListener('click', () => {
+                    const current = document.documentElement.getAttribute('data-theme') || 'light';
+                    const target = current === 'dark' ? 'light' : 'dark';
+                    document.documentElement.setAttribute('data-theme', target);
+                    localStorage.setItem('theme', target);
+                    const themeIcon = document.getElementById('themeIcon');
+                    if (themeIcon) themeIcon.className = target === 'dark' ? 'ph ph-sun' : 'ph ph-moon';
+                });
+            }
+
+            // Inisialisasi posisi tooltip slider opacity sejak awal
+            document.querySelectorAll('.param-item-card').forEach(card => {
+                const layerKey = card.getAttribute('data-layer');
+                const initYear = card.getAttribute('data-year');
+                const initOpacity = parseInt(card.getAttribute('data-opacity'), 10);
+                layerStates[layerKey] = { year: initYear, opacity: initOpacity / 100 };
+
+                card.querySelectorAll('input[type="range"].mini-range').forEach(slider => {
+                    updateTooltipPosition(slider);
+                    slider.addEventListener('mousedown', () => slider.parentElement.classList.add('dragging'));
+                    slider.addEventListener('touchstart', () => slider.parentElement.classList.add('dragging'));
+                });
+            });
+
+            window.addEventListener('mouseup', () => {
+                document.querySelectorAll('.slider-track-wrap.dragging').forEach(el => el.classList.remove('dragging'));
+            });
+            window.addEventListener('touchend', () => {
+                document.querySelectorAll('.slider-track-wrap.dragging').forEach(el => el.classList.remove('dragging'));
+            });
+
+            // Inisialisasi Peta Leaflet
+            spatialMap = L.map('spatialMap', {
+                center: focusRegions.kalbar.center,
+                zoom: focusRegions.kalbar.zoom,
+                zoomControl: false
+            });
+
+            L.control.zoom({ position: 'topright' }).addTo(spatialMap);
+            L.control.scale({ position: 'bottomleft', imperial: false }).addTo(spatialMap);
+
+            currentBasemapLayer = L.tileLayer(basemaps.satellite, {
+                maxZoom: 19,
+                attribution: 'Esri World Imagery | <a href="https://www.openstreetmap.org/copyright" target="_blank">OSM</a>'
+            }).addTo(spatialMap);
+
+            spatialMap.on('mousemove', (e) => {
+                document.getElementById('coordTrackerText').innerText =
+                    `Lat: ${e.latlng.lat.toFixed(5)} | Lng: ${e.latlng.lng.toFixed(5)}`;
+            });
+
+            // ==========================================
+            // INISIALISASI RESIZER LEBAR SIDEBAR
+            // ==========================================
+            const sidebar = document.getElementById('spatialSidebar');
+            const resizer = document.getElementById('sidebarResizer');
+
+            if (sidebar && resizer) {
+                let isResizing = false;
+
+                resizer.addEventListener('mousedown', (e) => {
+                    isResizing = true;
+                    resizer.classList.add('resizing');
+                    sidebar.style.transition = 'none';
+                    document.body.style.cursor = 'col-resize';
+                    document.body.style.userSelect = 'none';
+                    e.preventDefault();
+                });
+
+                document.addEventListener('mousemove', (e) => {
+                    if (!isResizing) return;
+
+                    const sidebarRect = sidebar.getBoundingClientRect();
+                    const newWidth = e.clientX - sidebarRect.left;
+
+                    if (newWidth >= 280 && newWidth <= 650) {
+                        sidebar.style.width = `${newWidth}px`;
+                        if (spatialMap && spatialMap.invalidateSize) {
+                            spatialMap.invalidateSize();
+                        }
+                    }
+                });
+
+                document.addEventListener('mouseup', () => {
+                    if (isResizing) {
+                        isResizing = false;
+                        resizer.classList.remove('resizing');
+                        sidebar.style.transition = '';
+                        document.body.style.cursor = '';
+                        document.body.style.userSelect = '';
+
+                        if (spatialMap && spatialMap.invalidateSize) {
+                            spatialMap.invalidateSize();
+                        }
+                    }
+                });
+            }
+        });
+
+        function updateTooltipPosition(slider) {
+            const min = parseFloat(slider.min);
+            const max = parseFloat(slider.max);
+            const val = parseFloat(slider.value);
+            const pct = ((val - min) / (max - min)) * 100;
+            const tooltip = slider.parentElement.querySelector('.slider-tooltip');
+            if (tooltip) {
+                const clampedPct = Math.min(Math.max(pct, 10), 90);
+                tooltip.style.left = `${clampedPct}%`;
+            }
+        }
+
+        function selectParamYear(btn, layerKey, yearVal) {
+            const card = btn.closest('.param-item-card');
+            card.setAttribute('data-year', yearVal);
+            layerStates[layerKey].year = yearVal;
+
+            card.querySelectorAll('.year-chip').forEach(chip => chip.classList.remove('active'));
+            btn.classList.add('active');
+
+            const checkbox = card.querySelector('input[type="checkbox"]');
+            if (checkbox && checkbox.checked) {
+                showToast(`Memuat ${layerKey.toUpperCase()} Tahun ${yearVal} (Opacity ${Math.round(layerStates[layerKey].opacity * 100)}%)`);
+            }
+        }
+
+        function handleParamOpacity(slider, layerKey) {
+            const opacityVal = parseInt(slider.value, 10);
+            const card = slider.closest('.param-item-card');
+            card.setAttribute('data-opacity', opacityVal);
+            layerStates[layerKey].opacity = opacityVal / 100;
+
+            const tooltip = slider.parentElement.querySelector('.slider-tooltip');
+            if (tooltip) tooltip.innerText = `${opacityVal}`;
+
+            updateTooltipPosition(slider);
+
+            const layer = parameterLayers[layerKey];
+            if (layer && spatialMap && spatialMap.hasLayer(layer) && layer.setOpacity) {
+                layer.setOpacity(layerStates[layerKey].opacity);
+            }
+        }
+
+        function zoomToRegion(regionKey, resetSelect = false) {
+            if (!regionKey) return;
+
+            if (resetSelect) {
+                const selectEl = document.getElementById('kabKotaSelect');
+                if (selectEl) selectEl.selectedIndex = 0;
+            }
+
+            const target = focusRegions[regionKey];
+            if (target && spatialMap) {
+                spatialMap.flyTo(target.center, target.zoom, { duration: 1.2 });
+                showToast(`Fokus Peta: ${target.label}`);
+            }
+        }
+
+        function setBasemap(type, btn) {
+            document.querySelectorAll('.basemap-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            if (currentBasemapLayer) spatialMap.removeLayer(currentBasemapLayer);
+            currentBasemapLayer = L.tileLayer(basemaps[type], { maxZoom: 19 }).addTo(spatialMap);
+        }
+
+        function toggleParamGroup(groupId, btnElement) {
+            const content = document.getElementById(groupId);
+            const icon = btnElement.querySelector('i');
+            const isCurrentlyOpen = content.classList.contains('active');
+
+            if (isCurrentlyOpen) {
+                content.classList.remove('active');
+                btnElement.classList.remove('is-open');
+                icon.className = 'ph ph-caret-down';
+            } else {
+                content.classList.add('active');
+                btnElement.classList.add('is-open');
+                icon.className = 'ph ph-caret-up';
+            }
+        }
+
+        function toggleParameterLayer(layerKey, checkboxEl) {
+            const isChecked = checkboxEl.checked;
+            const card = checkboxEl.closest('.param-item-card');
+            const dataType = card ? card.getAttribute('data-type') : 'multi';
+
+            if (dataType === 'static' && card) {
+                const staticPill = card.querySelector('.static-year-pill');
+                if (staticPill) {
+                    staticPill.classList.toggle('is-active', isChecked);
+                }
+            }
+
+            const layer = parameterLayers[layerKey];
+            const state = layerStates[layerKey] || { year: '-', opacity: 0.8 };
+            if (!layer) {
+                if (isChecked) {
+                    showToast(`Layer "${layerKey.replace(/_/g, ' ').toUpperCase()}" (${state.year}, Opacity ${Math.round(state.opacity * 100)}%) aktif.`);
+                }
+                return;
+            }
+            if (isChecked) {
+                if (layer.setOpacity) layer.setOpacity(state.opacity);
+                spatialMap.addLayer(layer);
+            } else {
+                spatialMap.removeLayer(layer);
+            }
+        }
+
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.innerText = msg;
+            t.style.display = 'block';
+            clearTimeout(window.toastTimer);
+            window.toastTimer = setTimeout(() => { t.style.display = 'none'; }, 3000);
+        }
+
+        function handleSearchInput(val) {
+            const query = val.trim();
+            const resultsBox = document.getElementById('locationSearchResults');
+            clearTimeout(searchDebounceTimer);
+
+            if (query === '') {
+                if (resultsBox) resultsBox.classList.remove('open');
+                if (searchMarker && spatialMap) {
+                    spatialMap.removeLayer(searchMarker);
+                    searchMarker = null;
+                }
+                return;
+            }
+
+            if (query.length >= 2) {
+                searchDebounceTimer = setTimeout(() => {
+                    searchMapLocation();
+                }, 350);
+            }
+        }
+
+        async function searchMapLocation() {
+            const query = document.getElementById('locationSearchInput').value.trim();
+            const resultsBox = document.getElementById('locationSearchResults');
+            if (!query) return;
+
+            resultsBox.innerHTML = '<div class="search-result-item">Mencari lokasi...</div>';
+            resultsBox.classList.add('open');
+
+            try {
+                const url = `https://nominatim.openstreetmap.org/search?format=json&limit=5&countrycodes=id&viewbox=108.5,2.2,114.3,-3.2&q=${encodeURIComponent(query)}`;
+                const response = await fetch(url);
+                const data = await response.json();
+
+                if (!data || data.length === 0) {
+                    resultsBox.innerHTML = '<div class="search-result-item">Lokasi tidak ditemukan.</div>';
+                    return;
+                }
+
+                resultsBox.innerHTML = data.map((item) => `
+                    <div class="search-result-item" onclick="selectSearchLocation(${item.lat}, ${item.lon}, '${item.display_name.replace(/'/g, "\\'")}')">
+                        ${item.display_name}
+                    </div>
+                `).join('');
+            } catch (err) {
+                resultsBox.innerHTML = '<div class="search-result-item">Gagal memuat pencarian.</div>';
+            }
+        }
+
+        function selectSearchLocation(lat, lon, label) {
+            const resultsBox = document.getElementById('locationSearchResults');
+            const searchInput = document.getElementById('locationSearchInput');
+
+            if (resultsBox) resultsBox.classList.remove('open');
+            if (searchInput) searchInput.value = '';
+
+            const coords = [parseFloat(lat), parseFloat(lon)];
+            spatialMap.flyTo(coords, 12, { duration: 1.2 });
+
+            if (searchMarker) {
+                spatialMap.removeLayer(searchMarker);
+            }
+
+            searchMarker = L.marker(coords).addTo(spatialMap)
+                .bindPopup(`<strong>Lokasi Ditemukan:</strong><br>${label}`)
+                .openPopup()
+                .on('popupclose', () => {
+                    if (searchMarker) {
+                        spatialMap.removeLayer(searchMarker);
+                        searchMarker = null;
+                    }
+                });
+        }
+
+        document.addEventListener('click', (e) => {
+            const box = document.querySelector('.map-search-box');
+            const resultsBox = document.getElementById('locationSearchResults');
+            if (box && resultsBox && !box.contains(e.target)) {
+                resultsBox.classList.remove('open');
+            }
+        });
+        function openHazardModal() {
+            const modal = document.getElementById('hazardModalOverlay');
+            if (modal) modal.classList.add('open');
+        }
+
+        function closeHazardModal() {
+            const modal = document.getElementById('hazardModalOverlay');
+            if (modal) modal.classList.remove('open');
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeHazardModal();
+            }
+        });
+    </script>
+</body>
+</html>
