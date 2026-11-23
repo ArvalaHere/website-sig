@@ -9,6 +9,23 @@ from typing import Any, Dict, List, Optional, Tuple
 import httpx
 import numpy as np
 import rasterio
+
+import os
+from pathlib import Path
+
+# Prevent PostgreSQL/PostGIS PROJ database conflict on Windows
+for env_var in ("PROJ_LIB", "PROJ_DATA"):
+    os.environ.pop(env_var, None)
+
+try:
+    import rasterio._env
+    rasterio_data_dir = Path(rasterio._env.__file__).resolve().parent / "proj_data"
+    if rasterio_data_dir.exists():
+        os.environ["PROJ_DATA"] = str(rasterio_data_dir)
+        os.environ["PROJ_LIB"] = str(rasterio_data_dir)
+except Exception:
+    pass
+
 from rasterio.enums import Resampling
 from rasterio.transform import from_bounds
 from rasterio.warp import transform_bounds, reproject
